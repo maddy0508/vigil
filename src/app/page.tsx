@@ -49,6 +49,15 @@ export default function DashboardPage() {
   const runSystemCheck = async () => {
     if (typeof window === 'undefined' || !window.electronAPI) {
       console.log("Not in Electron environment, skipping system check.");
+      // Add mock data for browser-based development
+      const mockIncident: Incident = {
+          time: new Date().toISOString(),
+          title: "System Scan (Simulated)",
+          description: "This is a simulated scan running in a browser.",
+          details: `Scan complete. No threats found in simulation.`,
+          isMalicious: false,
+      };
+      // setIncidents(prev => [mockIncident, ...prev].slice(0, 20));
       return;
     }
     
@@ -71,9 +80,9 @@ export default function DashboardPage() {
 
       const newIncident: Incident = {
           time: new Date().toISOString(),
-          title: result.isMalicious ? "Malicious Activity Detected" : "System Scan Completed",
+          title: result.isMalicious ? "Threat Neutralized" : "System Scan Completed",
           description: result.reasoning.substring(0, 100) + (result.reasoning.length > 100 ? '...' : ''),
-          details: `Scan complete. ${result.isMalicious ? 'Threats found.' : 'No threats found.'}`,
+          details: result.isMalicious ? `Response: ${result.actionsTaken}` : 'Scan complete. No threats found.',
           isMalicious: result.isMalicious,
           attackerSummary: result.attackerProfile?.summary,
       };
@@ -85,14 +94,14 @@ export default function DashboardPage() {
               id: `threat-${Date.now()}`,
               description: result.reasoning,
               severity: "High", // Simplified for now
-              status: 'Action Recommended',
+              status: 'Neutralized',
               timestamp: new Date().toLocaleTimeString(),
           };
           setThreats(prev => [newThreat, ...prev].slice(0, 20));
           toast({
               variant: "destructive",
-              title: "Threat Detected",
-              description: result.reasoning.substring(0, 50) + "...",
+              title: "Threat Detected & Action Taken",
+              description: result.actionsTaken,
           });
       }
 

@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ export type Threat = {
   id: string;
   description: string;
   severity: "High" | "Medium" | "Low";
-  status: "New" | "Action Recommended" | "Quarantined";
+  status: "New" | "Action Recommended" | "Quarantined" | "Neutralized";
   timestamp: string;
 }
 
@@ -48,8 +49,12 @@ export function ThreatsTable({ threats }: ThreatsTableProps) {
                   {threat.severity}
                 </Badge>
               </TableCell>
-              <TableCell className="font-medium">{threat.description}</TableCell>
-              <TableCell>{threat.status}</TableCell>
+              <TableCell className="font-medium max-w-sm truncate">{threat.description}</TableCell>
+              <TableCell>
+                 <Badge variant={threat.status === 'Neutralized' ? 'default' : 'secondary'}>
+                  {threat.status}
+                </Badge>
+              </TableCell>
               <TableCell>{threat.timestamp}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
@@ -61,7 +66,7 @@ export function ThreatsTable({ threats }: ThreatsTableProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Quarantine</DropdownMenuItem>
+                    <DropdownMenuItem>Generate Report</DropdownMenuItem>
                     <DropdownMenuItem>Dismiss</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
