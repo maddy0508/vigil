@@ -14,9 +14,9 @@ import {z} from 'genkit';
 const AttackerProfileGeneratorInputSchema = z.object({
   incidentData: z
     .string()
-    .describe('Detailed incident data including logs and system states.'),
+    .describe('Detailed incident data including AI reasoning, logs, and system states.'),
   logs: z.string().describe('System logs related to the incident.'),
-  descriptors: z.string().describe('Descriptors of the incident.'),
+  descriptors: z.string().describe('A high-level descriptor of the incident.'),
   systemStates: z.string().describe('The states of the system during the incident.'),
 });
 export type AttackerProfileGeneratorInput =
@@ -24,9 +24,11 @@ export type AttackerProfileGeneratorInput =
 
 const AttackerProfileGeneratorOutputSchema = z.object({
   attackerProfile: z.object({
-    techniques: z.array(z.string()).describe('Techniques used by the attacker.'),
-    motives: z.array(z.string()).describe('Potential motives of the attacker.'),
-    summary: z.string().describe('A summary of the attacker profile.'),
+    threatLevel: z.enum(['Low', 'Medium', 'High', 'Critical']).describe('The assessed threat level.'),
+    techniques: z.array(z.string()).describe('Observed attacker techniques, tactics, and procedures (TTPs).'),
+    motives: z.array(z.string()).describe('Potential motives of the attacker (e.g., financial, espionage, disruption).'),
+    indicatorsOfCompromise: z.array(z.string()).describe('Specific indicators of compromise (IoCs) like IP addresses, file hashes, or domains.'),
+    summary: z.string().describe('A summary of the attacker profile suitable for a law enforcement report.'),
   }),
 });
 export type AttackerProfileGeneratorOutput =
@@ -42,16 +44,21 @@ const prompt = ai.definePrompt({
   name: 'attackerProfileGeneratorPrompt',
   input: {schema: AttackerProfileGeneratorInputSchema},
   output: {schema: AttackerProfileGeneratorOutputSchema},
-  prompt: `You are an expert cybersecurity analyst. Analyze the provided incident data, logs,
-descriptors, and system states to construct a comprehensive attacker profile.
+  prompt: `You are an expert cybersecurity analyst creating a detailed attacker profile for a law enforcement report.
+  Analyze the provided incident data, logs, descriptors, and system states to construct a comprehensive profile.
 
-Identify the techniques used by the attacker, potential motives, and provide a summary of the
-attacker profile.
-
-Incident Data: {{{incidentData}}}
-Logs: {{{logs}}}
-Descriptors: {{{descriptors}}}
-System States: {{{systemStates}}}`,
+  Incident Data: {{{incidentData}}}
+  Logs: {{{logs}}}
+  Descriptors: {{{descriptors}}}
+  System States: {{{systemStates}}}
+  
+  Your report must contain:
+  - A clear assessment of the threat level.
+  - A list of observed techniques, tactics, and procedures (TTPs).
+  - A list of potential motives.
+  - A list of concrete Indicators of Compromise (IoCs). This is critical. Extract every IP address, domain name, file hash, or suspicious username you can find.
+  - A professional summary of the attacker and the incident, written in a tone appropriate for law enforcement.
+  `,
 });
 
 const attackerProfileGeneratorFlow = ai.defineFlow(

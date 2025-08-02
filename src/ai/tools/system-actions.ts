@@ -76,3 +76,56 @@ export const changeSystemSetting = ai.defineTool(
     return executeCommand(command);
   }
 );
+
+export const runTraceroute = ai.defineTool(
+  {
+    name: 'runTraceroute',
+    description: 'Performs a traceroute to a given IP address or hostname to map the network path.',
+    inputSchema: z.object({
+      target: z.string().describe('The IP address or hostname to trace.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ target }) => {
+    // Use `tracert` on Windows and `traceroute` on Linux/macOS
+    const command = process.platform === 'win32' ? `tracert ${target}` : `traceroute ${target}`;
+    return executeCommand(command);
+  }
+);
+
+export const runPortScan = ai.defineTool(
+  {
+    name: 'runPortScan',
+    description: "Runs a port scan against a target IP address to find open ports. Requires 'nmap' to be installed.",
+    inputSchema: z.object({
+      target: z.string().describe('The IP address to scan.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ target }) => {
+    // nmap is a powerful network scanning tool. It needs to be installed on the system.
+    const command = `nmap -F ${target}`; // -F for fast scan (common ports)
+    return executeCommand(command).catch(error => {
+      if (error.message.includes('command not found')) {
+        return "Error: 'nmap' command not found. Please install 'nmap' to enable port scanning.";
+      }
+      throw error;
+    });
+  }
+);
+
+export const getDnsInfo = ai.defineTool(
+  {
+    name: 'getDnsInfo',
+    description: 'Retrieves DNS information (e.g., A, MX, NS records) for a given domain.',
+    inputSchema: z.object({
+      domain: z.string().describe('The domain to lookup.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ domain }) => {
+    // `nslookup` is available on both Windows and Linux/macOS.
+    const command = `nslookup ${domain}`;
+    return executeCommand(command);
+  }
+);

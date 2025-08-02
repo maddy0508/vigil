@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { attackerProfileGenerator } from './attacker-profile-generator';
+import { runPortScan, runTraceroute, getDnsInfo } from '../tools/system-actions';
 
 const ThreatReasoningInputSchema = z.object({
   systemProcesses: z
@@ -78,26 +79,29 @@ const threatReasoningPrompt = ai.definePrompt({
   name: 'threatReasoningPrompt',
   input: {schema: ThreatReasoningInputSchema},
   output: {schema: ThreatReasoningOutputSchema},
-  prompt: `You are an expert security analyst and auditor with deep knowledge of all terminals, shells, and programming languages. Your primary responsibility is to maintain a constant state of vigilance by continuously logging, auditing, and querying every activity on the system.
+  tools: [runTraceroute, runPortScan, getDnsInfo],
+  prompt: `You are an expert security analyst and threat hunter. Your mission is to aggressively identify, analyze, and document threats to this system to create attacker profiles suitable for law enforcement. You must be relentless.
 
-  Based on the provided system state, determine if there is malicious activity. You must scrutinize every detail. Assume nothing is benign without verification.
-  Consider all vectors: processes, logs, binaries, network connections (FTP, SMB, SSH, all TCP/UDP traffic), discovered network services (Zeroconf, mDNS, like AirPlay or Chromecast), connected devices (Bluetooth, Wireless USB, PnP, telephony, RAS), system drivers, and known vulnerabilities. Every connection and device must be queried and understood.
-
-  Keep a log of all activities, including any changes made on the device. Regularly audit everything.
-
-  If malicious activity is detected, create a profile of the potential attacker. Analyze their techniques (TTPs), potential motives (e.g., data theft, ransom, espionage), and try to identify any indicators of compromise (IoCs) like IP addresses, file hashes, or domain names. The goal is to understand who they might be and what they are trying to achieve.
-
-  Provide detailed reasoning for your determination, and suggest concrete actions to take based on the threat level.
-
+  Analyze the following system data. Scrutinize every detail. Assume nothing is benign.
   System Processes: {{{systemProcesses}}}
   Logs: {{{logs}}}
   Binaries: {{{binaries}}}
   Network Connections: {{{networkConnections}}}
-  Connected Devices: {{{connectedDevices}}}
+  Connected Devices & PnP Events: {{{connectedDevices}}}
   System Drivers: {{{systemDrivers}}}
-  Discovered Services: {{{discoveredServices}}}
+  Discovered Network Services (Zeroconf/mDNS): {{{discoveredServices}}}
   Known Vulnerabilities: {{{knownVulnerabilities}}}
-  \nSet isMalicious to true or false.\nReason about why you are setting to true or false.\nSuggest actions to take.
+  
+  Your analysis process:
+  1.  **Initial Triage:** Determine if there is any sign of malicious activity based on the provided data. Look for suspicious process names, unauthorized network connections (especially over SSH, FTP, SMB), unusual log entries, or connections to known bad IPs.
+  2.  **Active Interrogation:** If you find a suspicious IP address or domain, DO NOT STOP. You must use the available tools to hunt for more information.
+      *   Use the 'runTraceroute' tool to map the network path to the suspicious target.
+      *   Use the 'runPortScan' tool to check for open ports on the target.
+      *   Use the 'getDnsInfo' tool to gather more context on domains.
+  3.  **Synthesize Findings:** Combine the initial data with the results from your tool-based interrogation.
+  4.  **Conclude and Recommend:** Based on all evidence, determine if the activity is malicious (`isMalicious`). Provide detailed `reasoning` for your conclusion, referencing data from both the system state and your tool results. Finally, suggest concrete `suggestedActions` to mitigate the threat.
+  
+  Your final output must be a reasoned, evidence-based analysis. Every claim must be backed by the data you have.
   `,
 });
 

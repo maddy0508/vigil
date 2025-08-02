@@ -16,7 +16,10 @@ function executeCommand(command: string): Promise<string> {
                 return;
             }
             if (stderr) {
-                console.warn(`Exec command "${command}" produced stderr: ${stderr}`);
+                // Don't log this as a warning for certain commands that always output to stderr
+                if (!command.startsWith('avahi-browse')) {
+                    console.warn(`Exec command "${command}" produced stderr: ${stderr}`);
+                }
             }
             resolve(stdout);
         });
@@ -34,8 +37,26 @@ function getNetworkConnections(): Promise<string> {
     return executeCommand(command);
 }
 
+function getDiscoveredServices(): Promise<string> {
+    if (process.platform === 'win32') {
+        // Windows has built-in mDNS support, but listing devices programmatically is complex.
+        // This is a placeholder for a more advanced implementation.
+        return Promise.resolve("Service discovery (mDNS/Zeroconf) monitoring is less straightforward on Windows. No devices detected via this method.");
+    } else {
+        // Use avahi-browse for Linux. This requires the 'avahi-utils' package to be installed.
+        // The command will run for 3 seconds and then timeout, listing all discovered services.
+        return executeCommand('timeout 3 avahi-browse -a -r -t').catch(error => {
+            if (error.message.includes('command not found')) {
+                return "Warning: 'avahi-browse' command not found. Please install 'avahi-utils' for network service discovery.";
+            }
+            return `Error while scanning for network services: ${error.message}`;
+        });
+    }
+}
+
 
 module.exports = {
     getSystemProcesses,
     getNetworkConnections,
+    getDiscoveredServices,
 };
