@@ -13,6 +13,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { blockIpAddress, changeSystemSetting, uninstallProgram } from '../tools/system-actions';
 
 const IncidentResponseReasoningInputSchema = z.object({
   incidentData: z.string().describe('Detailed data about the security incident, including logs, process states, and file descriptors.'),
@@ -23,8 +24,8 @@ export type IncidentResponseReasoningInput = z.infer<typeof IncidentResponseReas
 const IncidentResponseReasoningOutputSchema = z.object({
   actions: z.array(
     z.object({
-      actionType: z.enum(['quarantineProcess', 'isolateFile', 'noAction']).describe('Type of action to take: quarantine a process, isolate a file, or take no action.'),
-      target: z.string().describe('The process ID or file path to quarantine or isolate.'),
+      actionType: z.enum(['quarantineProcess', 'isolateFile', 'noAction', 'blockIp', 'uninstallProgram', 'changeSetting']).describe('Type of action to take.'),
+      target: z.string().describe('The process ID, file path, IP address, program name, or setting to action.'),
       reason: z.string().describe('The reasoning behind the action taken.'),
     })
   ).describe('A list of actions to take based on the incident analysis.'),
@@ -40,6 +41,7 @@ const prompt = ai.definePrompt({
   name: 'incidentResponseReasoningPrompt',
   input: {schema: IncidentResponseReasoningInputSchema},
   output: {schema: IncidentResponseReasoningOutputSchema},
+  tools: [blockIpAddress, uninstallProgram, changeSystemSetting],
   prompt: `You are an expert security incident responder. Analyze the provided incident data and system state to determine the best course of action to mitigate the threat.
 
 Incident Data:
@@ -48,16 +50,17 @@ Incident Data:
 System State:
 {{systemState}}
 
-Based on your analysis, generate a list of actions to take. Each action should include:
-- actionType: quarantineProcess, isolateFile, or noAction
-- target: The process ID or file path to quarantine or isolate.
+Based on your analysis, generate a list of actions to take. Use the available tools to perform actions like blocking IPs, uninstalling programs, or changing settings when necessary.
+For each action, include:
+- actionType: 'quarantineProcess', 'isolateFile', 'blockIp', 'uninstallProgram', 'changeSetting', or 'noAction'
+- target: The process ID, file path, IP address, program name, or setting name to action.
 - reason: A detailed explanation of why this action is necessary.
 
 Finally, provide a summary of the incident and the recommended actions.
 
 Ensure your response is well-reasoned and provides a clear justification for each action taken.
 
-Output should be a JSON object with 'actions' and 'summary' fields, according to the schema description. The actionType must be one of 'quarantineProcess', 'isolateFile', or 'noAction'.
+Output should be a JSON object with 'actions' and 'summary' fields, according to the schema description.
 `,
 });
 
