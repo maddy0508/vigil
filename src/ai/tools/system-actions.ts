@@ -27,9 +27,14 @@ export const blockIpAddress = ai.defineTool(
     outputSchema: z.string(),
   },
   async ({ ip }) => {
-    // Command for UFW (Uncomplicated Firewall) on Debian/Ubuntu-based systems like Linux Mint.
-    // This command needs to be run with sudo, which the user would have to configure.
-    const command = `sudo ufw insert 1 deny from ${ip} to any`;
+    let command;
+    if (process.platform === 'win32') {
+      // Command for Windows Firewall
+      command = `netsh advfirewall firewall add rule name="Block ${ip}" dir=in action=block remoteip=${ip}`;
+    } else {
+      // Command for UFW (Uncomplicated Firewall) on Debian/Ubuntu-based systems.
+      command = `sudo ufw insert 1 deny from ${ip} to any`;
+    }
     return executeCommand(command);
   }
 );
@@ -44,9 +49,14 @@ export const uninstallProgram = ai.defineTool(
     outputSchema: z.string(),
   },
   async ({ programName }) => {
-    // This is a simplified example. Real-world uninstallation is much more complex.
-    // e.g. on Debian-based systems, you might use `sudo apt-get remove ...`
-    const command = `echo "Attempting to uninstall ${programName}"`;
+    // This is a simplified example. Real-world uninstallation is much more complex
+    // and platform-specific.
+    let command;
+     if (process.platform === 'win32') {
+        command = `echo "This is a placeholder for uninstalling ${programName} on Windows. Manual action is likely required."`;
+    } else {
+        command = `echo "This is a placeholder for uninstalling ${programName} on Linux. Manual action is likely required."`;
+    }
     return executeCommand(command);
   }
 );
