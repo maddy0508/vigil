@@ -117,15 +117,55 @@ export const runPortScan = ai.defineTool(
 export const getDnsInfo = ai.defineTool(
   {
     name: 'getDnsInfo',
-    description: 'Retrieves DNS information (e.g., A, MX, NS records) for a given domain.',
+    description: 'Retrieves DNS information (e.g., A, MX, NS records) for a given domain using `nslookup`.',
     inputSchema: z.object({
       domain: z.string().describe('The domain to lookup.'),
     }),
     outputSchema: z.string(),
   },
   async ({ domain }) => {
-    // `nslookup` is available on both Windows and Linux/macOS.
     const command = `nslookup ${domain}`;
     return executeCommand(command);
+  }
+);
+
+export const runWhois = ai.defineTool(
+  {
+    name: 'runWhois',
+    description: 'Performs a WHOIS lookup for a domain or IP address to get registration and ownership information.',
+    inputSchema: z.object({
+      target: z.string().describe('The domain name or IP address.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ target }) => {
+    const command = `whois ${target}`;
+    return executeCommand(command).catch(error => {
+      if (error.message.includes('command not found')) {
+        return "Error: 'whois' command not found. Please install 'whois' on your system.";
+      }
+      throw error;
+    });
+  }
+);
+
+export const runDig = ai.defineTool(
+  {
+    name: 'runDig',
+    description: 'Performs advanced DNS queries using the `dig` command. Can get various record types.',
+    inputSchema: z.object({
+      domain: z.string().describe('The domain to query.'),
+      recordType: z.string().optional().describe('The DNS record type to query (e.g., A, MX, TXT, ANY). Defaults to A.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ domain, recordType }) => {
+    const command = `dig ${domain} ${recordType || 'A'}`;
+     return executeCommand(command).catch(error => {
+      if (error.message.includes('command not found')) {
+        return "Error: 'dig' command not found. Please install 'dnsutils' or an equivalent package on your system.";
+      }
+      throw error;
+    });
   }
 );

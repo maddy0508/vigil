@@ -1,75 +1,81 @@
 'use server';
 
 /**
- * @fileOverview This file defines the policy adaptation manager flow, which automatically adjusts security policies based on past incident analysis and the evolving threat landscape.
+ * @fileOverview This file defines the self-improvement suggestion engine. The AI analyzes its own capabilities and recent events to suggest new features, tools, or monitoring strategies to enhance Vigil's effectiveness.
  *
- * - adaptSecurityPolicy - A function that handles the policy adaptation process.
- * - AdaptSecurityPolicyInput - The input type for the adaptSecurityPolicy function.
- * - AdaptSecurityPolicyOutput - The return type for the adaptSecurityPolicy function.
+ * - suggestionEngine - A function that handles the suggestion generation process.
+ * - SuggestionEngineInput - The input type for the suggestionEngine function.
+ * - SuggestionEngineOutput - The return type for the suggestionEngine function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const AdaptSecurityPolicyInputSchema = z.object({
-  incidentData: z
+const SuggestionEngineInputSchema = z.object({
+  recentIncidents: z
     .string()
     .describe(
-      'Detailed data from past security incidents, including logs, attack vectors, and system responses.'
+      'A summary of recent security incidents, including detected threats, attacker profiles, and actions taken.'
     ),
-  threatLandscape: z
+  currentCapabilities: z
     .string()
     .describe(
-      'Information about the current threat landscape, including new vulnerabilities, attack patterns, and emerging threats.'
-    ),
-  currentPolicies: z
-    .string()
-    .describe('The current security policies in place.'),
-});
-export type AdaptSecurityPolicyInput = z.infer<typeof AdaptSecurityPolicyInputSchema>;
-
-const AdaptSecurityPolicyOutputSchema = z.object({
-  updatedPolicies: z
-    .string()
-    .describe(
-      'The updated security policies, incorporating changes based on incident data and threat landscape analysis.'
-    ),
-  justification: z
-    .string()
-    .describe(
-      'A detailed explanation of why the policies were updated, including the specific threats or vulnerabilities addressed.'
+      'A description of Vigil\'s current tools and capabilities (e.g., "port scanning with nmap", "WHOIS lookups", "process monitoring").'
     ),
 });
-export type AdaptSecurityPolicyOutput = z.infer<typeof AdaptSecurityPolicyOutputSchema>;
+export type SuggestionEngineInput = z.infer<typeof SuggestionEngineInputSchema>;
 
-export async function adaptSecurityPolicy(
-  input: AdaptSecurityPolicyInput
-): Promise<AdaptSecurityPolicyOutput> {
-  return adaptSecurityPolicyFlow(input);
+const SuggestionEngineOutputSchema = z.object({
+  suggestions: z
+    .array(
+        z.object({
+            suggestion: z.string().describe("A specific, actionable suggestion for a new tool, capability, or monitoring strategy."),
+            justification: z.string().describe("The reasoning behind the suggestion, tying it to recent incidents or gaps in current capabilities."),
+            category: z.enum(["New Tool", "New Data Source", "AI Model Enhancement", "UX Improvement"]).describe("The category of the suggestion."),
+        })
+    )
+    .describe(
+      'A list of concrete suggestions for improving Vigil.'
+    ),
+});
+export type SuggestionEngineOutput = z.infer<typeof SuggestionEngineOutputSchema>;
+
+export async function suggestionEngine(
+  input: SuggestionEngineInput
+): Promise<SuggestionEngineOutput> {
+  return suggestionEngineFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'adaptSecurityPolicyPrompt',
-  input: {schema: AdaptSecurityPolicyInputSchema},
-  output: {schema: AdaptSecurityPolicyOutputSchema},
-  prompt: `You are an expert security administrator tasked with adapting security policies based on incident data and the current threat landscape.
+  name: 'suggestionEnginePrompt',
+  input: {schema: SuggestionEngineInputSchema},
+  output: {schema: SuggestionEngineOutputSchema},
+  prompt: `You are the core meta-learning AI for Vigil, a security application. Your primary function is to analyze Vigil's performance and suggest ways to make it better. You are a system that learns how to learn.
 
-  Analyze the provided incident data, threat landscape, and current policies to identify areas for improvement.
+  Analyze the provided summary of recent incidents and the list of Vigil's current capabilities. Your goal is to identify patterns, gaps, or opportunities for improvement.
 
-  Based on your analysis, generate updated security policies and provide a detailed justification for the changes.
+  - Did the threat hunters consistently lack a certain piece of information?
+  - Could a new tool have resolved an incident faster?
+  - Is there a new type of threat emerging that Vigil is not equipped to handle?
+  - Is there a way to improve the AI's reasoning or the user's experience?
 
-  Incident Data: {{{incidentData}}}
-  Threat Landscape: {{{threatLandscape}}}
-  Current Policies: {{{currentPolicies}}}
+  Based on your analysis, generate a list of concrete, actionable suggestions to enhance Vigil. For each suggestion, provide a clear justification linking it back to the data provided.
 
-  Updated Policies:`, // The prompt is expected to generate updated policies.
+  Recent Incidents Summary:
+  {{{recentIncidents}}}
+
+  Vigil's Current Capabilities:
+  {{{currentCapabilities}}}
+  
+  Generate your suggestions now.
+  `,
 });
 
-const adaptSecurityPolicyFlow = ai.defineFlow(
+const suggestionEngineFlow = ai.defineFlow(
   {
-    name: 'adaptSecurityPolicyFlow',
-    inputSchema: AdaptSecurityPolicyInputSchema,
-    outputSchema: AdaptSecurityPolicyOutputSchema,
+    name: 'suggestionEngineFlow',
+    inputSchema: SuggestionEngineInputSchema,
+    outputSchema: SuggestionEngineOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);

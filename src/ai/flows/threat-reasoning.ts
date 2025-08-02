@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { attackerProfileGenerator } from './attacker-profile-generator';
-import { runPortScan, runTraceroute, getDnsInfo } from '../tools/system-actions';
+import { runPortScan, runTraceroute, getDnsInfo, runWhois, runDig } from '../tools/system-actions';
 
 const ThreatReasoningInputSchema = z.object({
   systemProcesses: z
@@ -79,10 +79,10 @@ const threatReasoningPrompt = ai.definePrompt({
   name: 'threatReasoningPrompt',
   input: {schema: ThreatReasoningInputSchema},
   output: {schema: ThreatReasoningOutputSchema},
-  tools: [runTraceroute, runPortScan, getDnsInfo],
-  prompt: `You are an expert security analyst and threat hunter. Your mission is to aggressively identify, analyze, and document threats to this system to create attacker profiles suitable for law enforcement. You must be relentless.
+  tools: [runTraceroute, runPortScan, getDnsInfo, runWhois, runDig],
+  prompt: `You are an expert security analyst and OSINT investigator. Your mission is to aggressively hunt, investigate, and document threats to this system to create detailed attacker profiles suitable for law enforcement. You must be relentless and thorough.
 
-  Analyze the following system data. Scrutinize every detail. Assume nothing is benign.
+  Analyze the following system data. Scrutinize every detail. Assume nothing is benign until proven otherwise.
   System Processes: {{{systemProcesses}}}
   Logs: {{{logs}}}
   Binaries: {{{binaries}}}
@@ -92,16 +92,17 @@ const threatReasoningPrompt = ai.definePrompt({
   Discovered Network Services (Zeroconf/mDNS): {{{discoveredServices}}}
   Known Vulnerabilities: {{{knownVulnerabilities}}}
   
-  Your analysis process:
-  1.  **Initial Triage:** Determine if there is any sign of malicious activity based on the provided data. Look for suspicious process names, unauthorized network connections (especially over SSH, FTP, SMB), unusual log entries, or connections to known bad IPs.
-  2.  **Active Interrogation:** If you find a suspicious IP address or domain, DO NOT STOP. You must use the available tools to hunt for more information.
-      *   Use the 'runTraceroute' tool to map the network path to the suspicious target.
-      *   Use the 'runPortScan' tool to check for open ports on the target.
-      *   Use the 'getDnsInfo' tool to gather more context on domains.
-  3.  **Synthesize Findings:** Combine the initial data with the results from your tool-based interrogation.
-  4.  **Conclude and Recommend:** Based on all evidence, determine if the activity is malicious (`isMalicious`). Provide detailed `reasoning` for your conclusion, referencing data from both the system state and your tool results. Finally, suggest concrete `suggestedActions` to mitigate the threat.
+  Your analysis process is a multi-step investigation:
+  1.  **Initial Triage:** Determine if there is any sign of malicious activity. Look for suspicious process names, unauthorized network connections (especially over SSH, FTP, SMB), unusual log entries, or connections to known bad IPs.
+  2.  **Active Interrogation & OSINT:** If you find ANY suspicious IP address, domain, or artifact, DO NOT STOP. You must use the available tools to build a full intelligence picture.
+      *   Use 'runTraceroute' to map the network path to the suspicious target.
+      *   Use 'runPortScan' to check for open ports on the target.
+      *   Use 'getDnsInfo' and 'runDig' for comprehensive DNS investigation.
+      *   Use 'runWhois' to uncover the registration and ownership details of the IP or domain. This is critical for attribution.
+  3.  **Synthesize Findings:** Combine the initial data with the results from your tool-based interrogation. Correlate findings. For example, does the WHOIS information for a domain correspond to a suspicious open port?
+  4.  **Conclude and Recommend:** Based on all evidence, determine if the activity is malicious ('isMalicious'). Provide detailed 'reasoning' for your conclusion, referencing data from the system state and your OSINT tools. Finally, suggest concrete 'suggestedActions' to mitigate the threat and preserve evidence.
   
-  Your final output must be a reasoned, evidence-based analysis. Every claim must be backed by the data you have.
+  Your final output must be a reasoned, evidence-based analysis suitable for a formal report. Every claim must be backed by the data you have collected.
   `,
 });
 
