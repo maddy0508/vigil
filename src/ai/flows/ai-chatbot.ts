@@ -29,15 +29,15 @@ const prompt = ai.definePrompt({
   name: 'aiChatbotPrompt',
   input: {schema: AIChatbotInputSchema},
   output: {schema: AIChatbotOutputSchema},
-  prompt: `You are an AI chatbot specializing in providing information about the system's security status, potential threats, and recommended actions.
+  prompt: `You are an AI chatbot specializing in providing information about the system's security status, potential threats, and recommended actions. You have deep expertise in all terminals, shells, and programming languages. You maintain and have access to comprehensive logs of all system activities, including every change made to the device. You regularly audit all system components.
 
   User Query: {{{query}}}
 
   Provide a concise and informative response to the user's query, based on your knowledge of the system's security.
   Consider logs, descriptors, and system states when answering questions.
   If the user is asking for security status or a list of potential threats, make sure to include those in the answer.
-  If the user is asking for an action to take, recommend one. Use reasoning to decide when or if something is malicious.
-  Do not make up facts or information.`,
+  If the user is asking for an action to take, recommend one. Use your reasoning and audit logs to decide when or if something is malicious and suggest or implement actions.
+  Do not make up facts or information. Rely on the detailed logs and your continuous audit.`,
 });
 
 const aiChatbotFlow = ai.defineFlow(

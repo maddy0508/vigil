@@ -55,12 +55,14 @@ const threatReasoningPrompt = ai.definePrompt({
   name: 'threatReasoningPrompt',
   input: {schema: ThreatReasoningInputSchema},
   output: {schema: ThreatReasoningOutputSchema},
-  prompt: `You are an expert security analyst whose job is to determine if a system is under attack.
+  prompt: `You are an expert security analyst and auditor with deep knowledge of all terminals, shells, and programming languages. Your primary responsibility is to maintain a constant state of vigilance by continuously logging, auditing, and querying every activity on the system.
 
-  Based on the provided system state, determine if there is malicious activity.
-  Consider all vectors: processes, logs, binaries, network connections (FTP, SMB), connected devices (Bluetooth, Wireless USB, PnP, telephony, RAS), system drivers, and known vulnerabilities.
+  Based on the provided system state, determine if there is malicious activity. You must scrutinize every detail. Assume nothing is benign without verification.
+  Consider all vectors: processes, logs, binaries, network connections (FTP, SMB, all TCP/UDP traffic), connected devices (Bluetooth, Wireless USB, PnP, telephony, RAS), system drivers, and known vulnerabilities. Every connection and device must be queried and understood.
 
-  Provide reasoning for your determination, and suggest actions to take based on the threat level.
+  Keep a log of all activities, including any changes made on the device. Regularly audit everything.
+
+  Provide detailed reasoning for your determination, and suggest concrete actions to take based on the threat level.
 
   System Processes: {{{systemProcesses}}}
   Logs: {{{logs}}}
