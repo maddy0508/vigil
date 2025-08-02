@@ -17,7 +17,7 @@ const ThreatReasoningInputSchema = z.object({
   systemProcesses: z
     .string()
     .describe('A list of currently running system processes.'),
-  logs: z.string().describe('System logs for analysis.'),
+  logs: z.string().describe('System logs, including security events, errors, and warnings for analysis.'),
   binaries: z.string().describe('List of recently accessed or modified binaries.'),
   knownVulnerabilities: z
     .string()
@@ -93,7 +93,7 @@ const threatReasoningPrompt = ai.definePrompt({
   Known Vulnerabilities: {{{knownVulnerabilities}}}
   
   Your analysis process is a multi-step investigation:
-  1.  **Initial Triage:** Determine if there is any sign of malicious activity. Look for suspicious process names, unauthorized network connections (especially over SSH, FTP, SMB), unusual log entries, or connections to known bad IPs.
+  1.  **Initial Triage:** Determine if there is any sign of malicious activity. Look for suspicious process names, unauthorized network connections (especially over SSH, FTP, SMB), unusual log entries (like failed logins, privilege escalations, or kernel warnings), or connections to known bad IPs.
   2.  **Active Interrogation & OSINT:** If you find ANY suspicious IP address, domain, or artifact, DO NOT STOP. You must use the available tools to build a full intelligence picture.
       *   Use 'runTraceroute' to map the network path to the suspicious target.
       *   Use 'runPortScan' to check for open ports on the target.

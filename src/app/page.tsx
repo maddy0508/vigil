@@ -34,6 +34,7 @@ declare global {
       getSystemProcesses: () => Promise<string>;
       getNetworkConnections: () => Promise<string>;
       getDiscoveredServices: () => Promise<string>;
+      getSystemLogs: () => Promise<string>;
     };
   }
 }
@@ -53,17 +54,18 @@ export default function DashboardPage() {
     
     try {
       console.log("Running system check...");
-      const [processes, network, services] = await Promise.all([
+      const [processes, network, services, logs] = await Promise.all([
         window.electronAPI.getSystemProcesses(),
         window.electronAPI.getNetworkConnections(),
         window.electronAPI.getDiscoveredServices(),
+        window.electronAPI.getSystemLogs(),
       ]);
 
       const result: ThreatReasoningOutput = await threatReasoning({
         systemProcesses: processes,
         networkConnections: network,
         discoveredServices: services,
-        logs: "No logs collected in this scan.", // Placeholder
+        logs: logs,
         binaries: "No binaries scanned in this scan." // Placeholder
       });
 
