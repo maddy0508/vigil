@@ -11,85 +11,25 @@ import { AiChatbot } from "@/components/dashboard/ai-chatbot";
 import { ThreatsTable, type Threat } from "@/components/dashboard/threats-table";
 import { PolicyAdaptation } from "@/components/dashboard/policy-adaptation";
 import { ReportGeneration } from "@/components/dashboard/report-generation";
-import { Search, Menu, Play, Pause } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { RealtimeThreat } from "@/components/dashboard/realtime-threat";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
-import { useState, useEffect, useCallback } from "react";
-import { threatSimulator } from "@/ai/flows/threat-simulator";
-import { threatReasoning, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
 
 export default function DashboardPage() {
   const userName = "Alex";
-  const { toast } = useToast();
 
-  const [isSimulating, setIsSimulating] = useState(true);
-  const [threats, setThreats] = useState<Threat[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [threats] = useState<Threat[]>([]);
+  const [incidents] = useState<Incident[]>([]);
 
-  const runSimulation = useCallback(async () => {
-    try {
-      const simulatedEvent = await threatSimulator();
-      const analysis: ThreatReasoningOutput = await threatReasoning(simulatedEvent);
-      
-      const now = new Date();
-
-      if (analysis.isMalicious) {
-        const newThreat: Threat = {
-          id: `THR-${now.getTime()}`,
-          description: analysis.reasoning.split('.')[0], // First sentence as description
-          severity: 'High', // Simplified for demo
-          status: 'New',
-          timestamp: now.toLocaleTimeString(),
-        };
-        setThreats(prev => [newThreat, ...prev].slice(0, 5));
-
-         const newIncident: Incident = {
-          time: now.toISOString(),
-          title: "Malicious Activity Detected",
-          description: newThreat.description,
-          details: analysis.reasoning,
-          isMalicious: true,
-          attackerSummary: analysis.attackerProfile?.summary,
-        };
-        setIncidents(prev => [newIncident, ...prev].slice(0, 4));
-
-      } else {
-         const newIncident: Incident = {
-          time: now.toISOString(),
-          title: "System Activity Analyzed",
-          description: "Benign activity detected and logged.",
-          details: analysis.reasoning,
-          isMalicious: false,
-        };
-        setIncidents(prev => [newIncident, ...prev].slice(0, 4));
-      }
-
-    } catch (error) {
-      console.error("Simulation failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Simulation Error",
-        description: "Could not run the threat simulation."
-      })
-      setIsSimulating(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isSimulating) {
-      runSimulation(); // Run once immediately
-      const interval = setInterval(runSimulation, 10000); // Then every 10 seconds
-      return () => clearInterval(interval);
-    }
-  }, [isSimulating, runSimulation]);
-
+  // In a real application, this would be replaced with a real data feed from system hooks.
+  // For now, the dashboard will show an "Awaiting system events..." state.
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -139,10 +79,6 @@ export default function DashboardPage() {
               />
             </div>
           </form>
-           <Button variant="outline" size="icon" onClick={() => setIsSimulating(!isSimulating)}>
-            {isSimulating ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            <span className="sr-only">{isSimulating ? "Pause Simulation" : "Start Simulation"}</span>
-          </Button>
           <Avatar className="h-9 w-9">
             <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="person face" />
             <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
@@ -157,7 +93,6 @@ export default function DashboardPage() {
           <Card className="xl:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="font-headline text-xl">Incident Timeline</CardTitle>
-                <RealtimeThreat />
             </CardHeader>
             <CardContent>
               <IncidentTimeline incidents={incidents} />
