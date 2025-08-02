@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { RealtimeThreat } from "@/components/dashboard/realtime-threat";
+import { SystemVectors } from "@/components/dashboard/system-vectors";
 
 export default function DashboardPage() {
   return (
@@ -88,7 +89,15 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           <div className="grid gap-4 xl:grid-rows-2">
-            <Card className="row-span-2">
+             <Card>
+              <CardHeader>
+                <CardTitle className="font-headline text-xl">System Vectors</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SystemVectors />
+              </CardContent>
+            </Card>
+            <Card className="row-span-1">
               <CardHeader>
                 <CardTitle className="font-headline text-xl">AI Assistant</CardTitle>
               </CardHeader>
