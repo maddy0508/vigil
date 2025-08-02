@@ -16,6 +16,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { RealtimeThreat } from "@/components/dashboard/realtime-threat";
 
 export default function DashboardPage() {
   return (
@@ -78,8 +79,9 @@ export default function DashboardPage() {
             <OverviewCards />
           </div>
           <Card className="xl:col-span-2">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">Incident Timeline</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="font-headline text-xl">Incident Timeline</CardTitle>
+                <RealtimeThreat />
             </CardHeader>
             <CardContent>
               <IncidentTimeline />
