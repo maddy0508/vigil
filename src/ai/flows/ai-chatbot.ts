@@ -57,13 +57,7 @@ const aiChatbotFlow = ai.defineFlow(
     outputSchema: z.object({ response: z.string() }),
   },
   async (input) => {
-    const {output} = await ai.generate({
-        prompt: prompt.prompt,
-        input,
-        tools: prompt.tools,
-        model: 'googleai/gemini-2.0-flash'
-    });
-    
+    const {output} = await prompt(input);
     return output!;
   }
 );
