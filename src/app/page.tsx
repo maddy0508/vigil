@@ -126,14 +126,14 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-10">
+    <div className="flex min-h-screen w-full flex-col bg-background font-body">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6 z-10">
         <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <a href="#" className="flex items-center gap-2 text-lg font-semibold md:text-base text-primary">
             <VigilLogo className="h-7 w-7" />
-            <span className="font-headline text-foreground">Vigil</span>
+            <span className="font-headline text-foreground text-xl">Vigil</span>
           </a>
-          <a href="#" className="font-medium text-foreground transition-colors hover:text-foreground/80">Dashboard</a>
+          <a href="#" className="font-bold text-foreground transition-colors hover:text-foreground/80">Dashboard</a>
           <a href="#" className="text-muted-foreground transition-colors hover:text-foreground/80">Incidents</a>
           <a href="#" className="text-muted-foreground transition-colors hover:text-foreground/80">Policies</a>
           <a href="#" className="text-muted-foreground transition-colors hover:text-foreground/80">Reports</a>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
             <nav className="grid gap-6 text-lg font-medium">
               <a href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
                 <VigilLogo className="h-7 w-7" />
-                <span className="font-headline text-foreground">Vigil</span>
+                <span className="font-headline text-foreground text-xl">Vigil</span>
               </a>
               <a href="#" className="text-foreground hover:text-foreground/80">Dashboard</a>
               <a href="#" className="text-muted-foreground hover:text-foreground/80">Incidents</a>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
               <Input
                 type="search"
                 placeholder="Search threats, incidents..."
-                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px] bg-secondary"
               />
             </div>
           </form>
@@ -187,26 +187,26 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:col-span-3">
             <OverviewCards threats={threats} incidents={incidents} />
           </div>
-          <Card className="xl:col-span-2">
+          <Card className="xl:col-span-2 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="font-headline text-xl">Incident Timeline</CardTitle>
+                <CardTitle className="font-headline text-2xl">Incident Timeline</CardTitle>
             </CardHeader>
             <CardContent>
               <IncidentTimeline incidents={incidents} />
             </CardContent>
           </Card>
           <div className="grid gap-4 xl:grid-rows-2">
-             <Card>
+             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">System Vectors</CardTitle>
+                <CardTitle className="font-headline text-2xl">System Vectors</CardTitle>
               </CardHeader>
               <CardContent>
                 <SystemVectors />
               </CardContent>
             </Card>
-            <Card className="row-span-1">
+            <Card className="row-span-1 shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">AI Assistant</CardTitle>
+                <CardTitle className="font-headline text-2xl">AI Assistant</CardTitle>
               </CardHeader>
               <CardContent>
                 <AiChatbot userName={userName} />
@@ -215,15 +215,15 @@ export default function DashboardPage() {
           </div>
         </div>
         <Tabs defaultValue="threats">
-          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
+          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex bg-secondary">
             <TabsTrigger value="threats">Active Threats</TabsTrigger>
             <TabsTrigger value="policies">Policy Adaptation</TabsTrigger>
             <TabsTrigger value="reports">Report Generation</TabsTrigger>
           </TabsList>
           <TabsContent value="threats">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">Active Threats</CardTitle>
+                <CardTitle className="font-headline text-2xl">Active Threats</CardTitle>
               </CardHeader>
               <CardContent>
                 <ThreatsTable threats={threats} />
@@ -231,9 +231,9 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
           <TabsContent value="policies">
-             <Card>
+             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">Policy Adaptation Manager</CardTitle>
+                <CardTitle className="font-headline text-2xl">Policy Adaptation Manager</CardTitle>
               </CardHeader>
               <CardContent>
                 <PolicyAdaptation />
@@ -241,9 +241,9 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
           <TabsContent value="reports">
-             <Card>
+             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">Generate Forensic Report</CardTitle>
+                <CardTitle className="font-headline text-2xl">Generate Forensic Report</CardTitle>
               </CardHeader>
               <CardContent>
                 <ReportGeneration />

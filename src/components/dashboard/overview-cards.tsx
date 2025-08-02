@@ -34,6 +34,7 @@ export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
     const lowSeverityThreats = threats.filter(t => t.severity === 'Low').length;
 
     const totalThreats = threats.length;
+    const isSystemNominal = totalThreats === 0;
 
     const threatSeverityDistribution = totalThreats > 0 ? [
         { severity: 'High', count: highSeverityThreats, width: `${(highSeverityThreats / totalThreats) * 100}%`, color: 'bg-destructive' },
@@ -44,13 +45,13 @@ export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
 
   return (
     <>
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">System Status</CardTitle>
-          <Activity className="h-4 w-4 text-muted-foreground" />
+           {isSystemNominal ? <ShieldCheck className="h-4 w-4 text-green-500" /> : <ShieldAlert className="h-4 w-4 text-destructive" />}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">Normal</div>
+          <div className="text-2xl font-bold font-headline">{isSystemNominal ? "Nominal" : "Threats Detected"}</div>
           <p className="text-xs text-muted-foreground">
             CPU at 55%, Memory at 65%
           </p>
@@ -77,13 +78,13 @@ export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Threats</CardTitle>
           {totalThreats > 0 ? <ShieldAlert className="h-4 w-4 text-destructive" /> : <ShieldOff className="h-4 w-4 text-muted-foreground" />}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalThreats}</div>
+          <div className="text-2xl font-bold font-headline">{totalThreats}</div>
            {totalThreats > 0 ? (
                 <p className="text-xs text-muted-foreground">
                     {highSeverityThreats} High, {mediumSeverityThreats} Medium, {lowSeverityThreats} Low
@@ -94,7 +95,7 @@ export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
                 </p>
             )}
           <div className="mt-4 flex items-center gap-2">
-             <div className="w-full h-2 rounded-full bg-muted flex overflow-hidden">
+             <div className="w-full h-2 rounded-full bg-secondary flex overflow-hidden">
                 {threatSeverityDistribution.map((dist) => (
                     dist.count > 0 && <div key={dist.severity} style={{width: dist.width}} className={`${dist.color} h-2`}></div>
                 ))}
@@ -102,18 +103,21 @@ export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Policy Status</CardTitle>
-          <ShieldCheck className="h-4 w-4 text-green-500" />
+          <ShieldCheck className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">Compliant</div>
+          <div className="text-2xl font-bold font-headline">Compliant</div>
           <p className="text-xs text-muted-foreground">
             No policy adaptations needed
           </p>
-          <div className="mt-4 flex items-center gap-2">
-             <div className="text-sm font-medium">100% policies compliant</div>
+           <div className="mt-4 flex items-center gap-2">
+             <div className="w-full bg-secondary rounded-full h-2.5">
+                <div className="bg-primary h-2.5 rounded-full" style={{width: "100%"}}></div>
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">100%</span>
           </div>
         </CardContent>
       </Card>
