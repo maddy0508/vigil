@@ -20,6 +20,8 @@ import { RealtimeThreat } from "@/components/dashboard/realtime-threat";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
 
 export default function DashboardPage() {
+  const userName = "Alex"; // Let's assume the user's name is Alex for now
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-10">
@@ -70,7 +72,7 @@ export default function DashboardPage() {
           </form>
           <Avatar className="h-9 w-9">
             <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="person face" />
-            <AvatarFallback>V</AvatarFallback>
+            <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
       </header>
@@ -102,7 +104,7 @@ export default function DashboardPage() {
                 <CardTitle className="font-headline text-xl">AI Assistant</CardTitle>
               </CardHeader>
               <CardContent>
-                <AiChatbot />
+                <AiChatbot userName={userName} />
               </CardContent>
             </Card>
           </div>

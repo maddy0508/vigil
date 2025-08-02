@@ -15,9 +15,13 @@ type Message = {
   content: string;
 };
 
-export function AiChatbot() {
+interface AiChatbotProps {
+  userName: string;
+}
+
+export function AiChatbot({ userName }: AiChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hello! How can I help you with your system's security today?" }
+    { role: "assistant", content: `Hello ${userName}! How can I help you with your system's security today?` }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +43,7 @@ export function AiChatbot() {
     setIsLoading(true);
 
     try {
-      const response = await aiChatbot({ query: input });
+      const response = await aiChatbot({ query: input, userName });
       const assistantMessage: Message = { role: "assistant", content: response.response };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -67,7 +71,7 @@ export function AiChatbot() {
               </div>
               {message.role === 'user' && (
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback><User className="w-5 h-5" /></AvatarFallback>
+                  <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
                 </Avatar>
               )}
             </div>
