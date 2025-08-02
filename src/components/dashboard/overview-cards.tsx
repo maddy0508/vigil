@@ -1,8 +1,11 @@
+
 "use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart } from "recharts"
-import { Activity, ShieldAlert, ShieldCheck } from "lucide-react"
+import { Activity, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react"
+import { type Incident } from "./incident-timeline"
+import { type Threat } from "./threats-table"
 
 const chartData = [
   { time: "12:00", cpu: 30 },
@@ -20,7 +23,25 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function OverviewCards() {
+interface OverviewCardsProps {
+    threats: Threat[];
+    incidents: Incident[];
+}
+
+export function OverviewCards({ threats, incidents }: OverviewCardsProps) {
+    const highSeverityThreats = threats.filter(t => t.severity === 'High').length;
+    const mediumSeverityThreats = threats.filter(t => t.severity === 'Medium').length;
+    const lowSeverityThreats = threats.filter(t => t.severity === 'Low').length;
+
+    const totalThreats = threats.length;
+
+    const threatSeverityDistribution = totalThreats > 0 ? [
+        { severity: 'High', count: highSeverityThreats, width: `${(highSeverityThreats / totalThreats) * 100}%`, color: 'bg-destructive' },
+        { severity: 'Medium', count: mediumSeverityThreats, width: `${(mediumSeverityThreats / totalThreats) * 100}%`, color: 'bg-yellow-500' },
+        { severity: 'Low', count: lowSeverityThreats, width: `${(lowSeverityThreats / totalThreats) * 100}%`, color: 'bg-muted-foreground' },
+    ] : [];
+
+
   return (
     <>
       <Card>
@@ -59,17 +80,24 @@ export function OverviewCards() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Threats</CardTitle>
-          <ShieldAlert className="h-4 w-4 text-destructive" />
+          {totalThreats > 0 ? <ShieldAlert className="h-4 w-4 text-destructive" /> : <ShieldOff className="h-4 w-4 text-muted-foreground" />}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">3</div>
-          <p className="text-xs text-muted-foreground">
-            2 High, 1 Medium severity
-          </p>
+          <div className="text-2xl font-bold">{totalThreats}</div>
+           {totalThreats > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                    {highSeverityThreats} High, {mediumSeverityThreats} Medium, {lowSeverityThreats} Low
+                </p>
+            ) : (
+                <p className="text-xs text-muted-foreground">
+                    No active threats detected
+                </p>
+            )}
           <div className="mt-4 flex items-center gap-2">
-            <div className="w-full h-2 rounded-full bg-muted flex overflow-hidden">
-              <div style={{width: "66.66%"}} className="bg-destructive h-2"></div>
-              <div style={{width: "33.33%"}} className="bg-yellow-500 h-2"></div>
+             <div className="w-full h-2 rounded-full bg-muted flex overflow-hidden">
+                {threatSeverityDistribution.map((dist) => (
+                    dist.count > 0 && <div key={dist.severity} style={{width: dist.width}} className={`${dist.color} h-2`}></div>
+                ))}
             </div>
           </div>
         </CardContent>
@@ -82,10 +110,10 @@ export function OverviewCards() {
         <CardContent>
           <div className="text-2xl font-bold">Compliant</div>
           <p className="text-xs text-muted-foreground">
-            Last adapted: 2 hours ago
+            No policy adaptations needed
           </p>
           <div className="mt-4 flex items-center gap-2">
-             <div className="text-sm font-medium">98% policies adapted</div>
+             <div className="text-sm font-medium">100% policies compliant</div>
           </div>
         </CardContent>
       </Card>
