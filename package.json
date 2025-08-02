@@ -81,10 +81,24 @@
     "appId": "com.vigil.app",
     "productName": "Vigil",
     "files": [
-      ".next/**/*",
       "electron.cjs",
       "electron-preload.js",
-      "package.json"
+      "package.json",
+      {
+        "from": ".next/standalone",
+        "to": ".next/standalone"
+      },
+      {
+        "from": ".next/static",
+        "to": ".next/static"
+      },
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "asarUnpack": [
+      "**/.next/server/**"
     ],
     "directories": {
       "output": "dist",
