@@ -1,58 +1,57 @@
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const isDev = require('electron-is-dev');
+const { getSystemProcesses, getNetworkConnections, getDiscoveredServices, getSystemLogs } = require('./src/services/system-monitor');
 const { exec } = require('child_process');
-const { getSystemProcesses, getNetworkConnections } = require('./out/services/system-monitor');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1280,
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'electron-preload.js'),
-      // Important: contextIsolation is a security feature. Do not disable it.
       contextIsolation: true,
-      // Important: nodeIntegration should be false.
       nodeIntegration: false,
     },
   });
 
-  const startUrl = 'file://' + path.join(__dirname, 'out/index.html');
-  mainWindow.loadURL(startUrl);
+  const appUrl = isDev ? 'http://localhost:9002' : `file://${path.join(__dirname, 'out', 'index.html')}`;
+  mainWindow.loadURL(appUrl);
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-// Handle IPC command from renderer
+// IPC Handlers for system commands
 ipcMain.handle('execute-command', async (event, command) => {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
       if (error) {
-        console.error(`exec error: ${error}`);
-        return reject(stderr);
+        console.error(`Command execution error for: "${command}" -> ${error.message}`);
+        // For commands that might fail but still return useful info (like nmap not being installed)
+        resolve(stderr || `Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+         if (!command.startsWith('avahi-browse')) {
+            console.warn(`Command "${command}" produced stderr: ${stderr}`);
+        }
       }
       resolve(stdout);
     });
@@ -65,4 +64,12 @@ ipcMain.handle('get-system-processes', async () => {
 
 ipcMain.handle('get-network-connections', async () => {
     return getNetworkConnections();
+});
+
+ipcMain.handle('get-discovered-services', async () => {
+    return getDiscoveredServices();
+});
+
+ipcMain.handle('get-system-logs', async () => {
+    return getSystemLogs();
 });
