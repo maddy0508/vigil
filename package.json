@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "export": "next export",
     "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
-    "electron:build": "next build && next export && electron-builder",
+    "electron:build": "next build && electron-builder",
     "install:setup": "chmod +x install.sh && ./install.sh",
     "update": "chmod +x src/update_and_setup.sh && ./src/update_and_setup.sh"
   },
@@ -86,6 +86,9 @@
     ],
     "directories": {
       "output": "dist"
+    },
+    "linux": {
+      "target": "deb"
     }
   }
 }
