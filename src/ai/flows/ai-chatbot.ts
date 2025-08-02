@@ -54,7 +54,7 @@ const aiChatbotFlow = ai.defineFlow(
   {
     name: 'aiChatbotFlow',
     inputSchema: AIChatbotInputSchema,
-    outputSchema: z.object({ response: z.string() }),
+    outputSchema: AIChatbotOutputSchema,
   },
   async (input) => {
     const {output} = await prompt(input);
