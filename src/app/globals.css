@@ -31,25 +31,25 @@
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 13%; /* Dark Gray: #222222 */
-    --foreground: 0 0% 98%;
-    --card: 0 0% 16%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 13%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 217 38% 55%; /* Dusky Blue: #6082B6 */
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 217 38% 45%; /* Darker Dusky Blue */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
-    --ring: 217 38% 55%;
+    --background: 222 47% 11%; /* Dark Slate Blue */
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%; /* Brighter Blue for contrast */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 25%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 25%;
+    --muted-foreground: 215 28% 65%;
+    --accent: 217 91% 70%; 
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 217 91% 60%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
