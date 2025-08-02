@@ -1,6 +1,6 @@
 "use client"
 
-import { aiChatbot } from "@/ai/flows/ai-chatbot"
+import { aiChatbot, AIChatbotOutput } from "@/ai/flows/ai-chatbot"
 import { Bot, Send, User } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { useFlow } from "@genkit-ai/next/client"
 
 type Message = {
   role: "user" | "assistant";
@@ -25,7 +24,7 @@ export function AiChatbot({ userName }: AiChatbotProps) {
     { role: "assistant", content: `Hello ${userName}! How can I help you with your system's security today?` }
   ]);
   const [input, setInput] = useState("");
-  const { last, inProgress, run } = useFlow(aiChatbot);
+  const [inProgress, setInProgress] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -41,28 +40,19 @@ export function AiChatbot({ userName }: AiChatbotProps) {
     const userMessage: Message = { role: "user", content: input };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setInProgress(true);
   
-    run({ query: input, userName });
-  };
-  
-  useEffect(() => {
-    if (last) {
-      const assistantMessage: Message = { role: 'assistant', content: last.response };
-  
-      setMessages((prevMessages) => {
-        // If the last message was from the assistant (the one being streamed), update it.
-        // Otherwise, add a new message.
-        const lastMsg = prevMessages[prevMessages.length - 1];
-        if (lastMsg && lastMsg.role === 'assistant') {
-          const newMessages = [...prevMessages];
-          newMessages[newMessages.length - 1] = assistantMessage;
-          return newMessages;
-        } else {
-          return [...prevMessages, assistantMessage];
-        }
-      });
+    try {
+      const result: AIChatbotOutput = await aiChatbot({ query: input, userName });
+      const assistantMessage: Message = { role: 'assistant', content: result.response };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+       const errorMessage: Message = { role: 'assistant', content: "Sorry, I encountered an error. Please try again." };
+       setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setInProgress(false);
     }
-  }, [last]);
+  };
 
   return (
     <div className="flex flex-col h-[220px] -m-6 bg-card rounded-lg">
@@ -85,7 +75,7 @@ export function AiChatbot({ userName }: AiChatbotProps) {
               )}
             </div>
           ))}
-          {inProgress && !last && (
+          {inProgress && (
              <div className="flex items-start gap-3">
               <Avatar className="w-8 h-8 border border-primary">
                 <AvatarFallback><Bot className="w-5 h-5 text-primary" /></AvatarFallback>

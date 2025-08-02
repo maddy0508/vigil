@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { blockIpAddress, changeSystemSetting, uninstallProgram } from '../tools/system-actions';
-import {streamFlow} from '@genkit-ai/next/server';
 
 const AIChatbotInputSchema = z.object({
   query: z.string().describe('The user query about the system security.'),
@@ -25,7 +24,9 @@ const AIChatbotOutputSchema = z.object({
 export type AIChatbotOutput = z.infer<typeof AIChatbotOutputSchema>;
 
 
-export const aiChatbot = streamFlow(aiChatbotFlow);
+export async function aiChatbot(input: AIChatbotInput): Promise<AIChatbotOutput> {
+  return aiChatbotFlow(input);
+}
 
 const prompt = ai.definePrompt({
   name: 'aiChatbotPrompt',
@@ -54,22 +55,14 @@ const aiChatbotFlow = ai.defineFlow(
     inputSchema: AIChatbotInputSchema,
     outputSchema: z.object({ response: z.string() }),
   },
-  async (input, streamingCallback) => {
-    const {stream} = await ai.generateStream({
+  async (input) => {
+    const {output} = await ai.generate({
         prompt: prompt.prompt,
         input,
         tools: prompt.tools,
         model: 'googleai/gemini-2.0-flash'
     });
     
-    let response = '';
-    for await (const chunk of stream) {
-        if(chunk.text){
-            response += chunk.text;
-            streamingCallback({response});
-        }
-    }
-
-    return { response };
+    return output!;
   }
 );
