@@ -1,8 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
-
-const isDev = process.env.NODE_ENV !== 'production';
+const { getSystemProcesses, getNetworkConnections } = require('./out/services/system-monitor');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -10,56 +9,60 @@ function createWindow() {
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'electron-preload.js'),
+      // Important: contextIsolation is a security feature. Do not disable it.
       contextIsolation: true,
+      // Important: nodeIntegration should be false.
       nodeIntegration: false,
     },
   });
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:9002');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, 'out', 'index.html'));
-  }
+  const startUrl = 'file://' + path.join(__dirname, 'out/index.html');
+  mainWindow.loadURL(startUrl);
+
+  // Open the DevTools.
+  // mainWindow.webContents.openDevTools();
 }
 
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+  app.on('activate', function () {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit();
 });
 
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
 
-// IPC handler for executing system commands
+// Handle IPC command from renderer
 ipcMain.handle('execute-command', async (event, command) => {
-    return new Promise((resolve, reject) => {
-        // IMPORTANT: In a real-world application, this is a major security risk
-        // and should be handled with extreme care. Commands should be sanitized
-        // and validated. For this prototype, we will log the command instead of
-        // executing it to prevent accidental system changes.
-        console.log(`[SECURITY] Received command to execute: ${command}`);
-        // To actually run it, you would use:
-        // exec(command, (error, stdout, stderr) => {
-        //     if (error) {
-        //         console.error(`exec error: ${error}`);
-        //         return reject(error.message);
-        //     }
-        //     if (stderr) {
-        //         console.error(`stderr: ${stderr}`);
-        //         return reject(stderr);
-        //     }
-        //     resolve(stdout);
-        // });
-        resolve(`Simulated execution of: ${command}`);
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return reject(stderr);
+      }
+      resolve(stdout);
     });
+  });
+});
+
+ipcMain.handle('get-system-processes', async () => {
+    return getSystemProcesses();
+});
+
+ipcMain.handle('get-network-connections', async () => {
+    return getNetworkConnections();
 });

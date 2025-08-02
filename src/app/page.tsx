@@ -22,17 +22,94 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { threatReasoning, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
+import { useToast } from "@/hooks/use-toast";
 
+
+// Extend the Window interface to include our electronAPI
+declare global {
+  interface Window {
+    electronAPI: {
+      getSystemProcesses: () => Promise<string>;
+      getNetworkConnections: () => Promise<string>;
+    };
+  }
+}
 
 export default function DashboardPage() {
   const userName = "Alex";
 
-  const [threats] = useState<Threat[]>([]);
-  const [incidents] = useState<Incident[]>([]);
+  const [threats, setThreats] = useState<Threat[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const { toast } = useToast();
 
-  // In a real application, this would be replaced with a real data feed from system hooks.
-  // For now, the dashboard will show an "Awaiting system events..." state.
+  const runSystemCheck = async () => {
+    if (typeof window === 'undefined' || !window.electronAPI) {
+      console.log("Not in Electron environment, skipping system check.");
+      return;
+    }
+    
+    try {
+      console.log("Running system check...");
+      const [processes, network] = await Promise.all([
+        window.electronAPI.getSystemProcesses(),
+        window.electronAPI.getNetworkConnections(),
+      ]);
+
+      const result: ThreatReasoningOutput = await threatReasoning({
+        systemProcesses: processes,
+        networkConnections: network,
+        logs: "No logs collected in this scan.", // Placeholder
+        binaries: "No binaries scanned in this scan." // Placeholder
+      });
+
+      const newIncident: Incident = {
+          time: new Date().toISOString(),
+          title: result.isMalicious ? "Malicious Activity Detected" : "System Scan Completed",
+          description: result.reasoning.substring(0, 100) + (result.reasoning.length > 100 ? '...' : ''),
+          details: `Scan complete. ${result.isMalicious ? 'Threats found.' : 'No threats found.'}`,
+          isMalicious: result.isMalicious,
+          attackerSummary: result.attackerProfile?.summary,
+      };
+
+      setIncidents(prev => [newIncident, ...prev].slice(0, 20));
+
+      if (result.isMalicious) {
+          const newThreat: Threat = {
+              id: `threat-${Date.now()}`,
+              description: result.reasoning,
+              severity: "High", // Simplified for now
+              status: 'Action Recommended',
+              timestamp: new Date().toLocaleTimeString(),
+          };
+          setThreats(prev => [newThreat, ...prev].slice(0, 20));
+          toast({
+              variant: "destructive",
+              title: "Threat Detected",
+              description: result.reasoning.substring(0, 50) + "...",
+          });
+      }
+
+    } catch (error) {
+      console.error("Error during system check:", error);
+       toast({
+        variant: "destructive",
+        title: "Scan Failed",
+        description: "Could not perform the system scan.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Run an initial check on load
+    runSystemCheck();
+    // Then run a check every 30 seconds
+    const intervalId = setInterval(runSystemCheck, 30000); 
+
+    return () => clearInterval(intervalId);
+  }, []);
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -60,7 +137,7 @@ export default function DashboardPage() {
           </SheetTrigger>
           <SheetContent side="left">
              <SheetHeader>
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                <SheetTitle className="sr-only">Vigil Navigation</SheetTitle>
              </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
               <a href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
