@@ -14,7 +14,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "export": "next export",
-    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
+    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
     "electron:build:linux": "next build && electron-builder --linux",
     "electron:build:win": "next build && electron-builder --win",
     "install:setup": "chmod +x install.sh && ./install.sh",
