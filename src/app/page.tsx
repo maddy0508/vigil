@@ -1,15 +1,17 @@
+"use client"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VigilLogo } from "@/components/vigil-logo";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
-import { IncidentTimeline } from "@/components/dashboard/incident-timeline";
+import { IncidentTimeline, type Incident } from "@/components/dashboard/incident-timeline";
 import { AiChatbot } from "@/components/dashboard/ai-chatbot";
-import { ThreatsTable } from "@/components/dashboard/threats-table";
+import { ThreatsTable, type Threat } from "@/components/dashboard/threats-table";
 import { PolicyAdaptation } from "@/components/dashboard/policy-adaptation";
 import { ReportGeneration } from "@/components/dashboard/report-generation";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, Play, Pause } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -18,9 +20,76 @@ import {
 } from "@/components/ui/sheet";
 import { RealtimeThreat } from "@/components/dashboard/realtime-threat";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
+import { useState, useEffect, useCallback } from "react";
+import { threatSimulator } from "@/ai/flows/threat-simulator";
+import { threatReasoning, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
-  const userName = "Alex"; // Let's assume the user's name is Alex for now
+  const userName = "Alex";
+  const { toast } = useToast();
+
+  const [isSimulating, setIsSimulating] = useState(true);
+  const [threats, setThreats] = useState<Threat[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+
+  const runSimulation = useCallback(async () => {
+    try {
+      const simulatedEvent = await threatSimulator();
+      const analysis: ThreatReasoningOutput = await threatReasoning(simulatedEvent);
+      
+      const now = new Date();
+
+      if (analysis.isMalicious) {
+        const newThreat: Threat = {
+          id: `THR-${now.getTime()}`,
+          description: analysis.reasoning.split('.')[0], // First sentence as description
+          severity: 'High', // Simplified for demo
+          status: 'New',
+          timestamp: now.toLocaleTimeString(),
+        };
+        setThreats(prev => [newThreat, ...prev].slice(0, 5));
+
+         const newIncident: Incident = {
+          time: now.toISOString(),
+          title: "Malicious Activity Detected",
+          description: newThreat.description,
+          details: analysis.reasoning,
+          isMalicious: true,
+          attackerSummary: analysis.attackerProfile?.summary,
+        };
+        setIncidents(prev => [newIncident, ...prev].slice(0, 4));
+
+      } else {
+         const newIncident: Incident = {
+          time: now.toISOString(),
+          title: "System Activity Analyzed",
+          description: "Benign activity detected and logged.",
+          details: analysis.reasoning,
+          isMalicious: false,
+        };
+        setIncidents(prev => [newIncident, ...prev].slice(0, 4));
+      }
+
+    } catch (error) {
+      console.error("Simulation failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Simulation Error",
+        description: "Could not run the threat simulation."
+      })
+      setIsSimulating(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (isSimulating) {
+      runSimulation(); // Run once immediately
+      const interval = setInterval(runSimulation, 10000); // Then every 10 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isSimulating, runSimulation]);
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -70,6 +139,10 @@ export default function DashboardPage() {
               />
             </div>
           </form>
+           <Button variant="outline" size="icon" onClick={() => setIsSimulating(!isSimulating)}>
+            {isSimulating ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            <span className="sr-only">{isSimulating ? "Pause Simulation" : "Start Simulation"}</span>
+          </Button>
           <Avatar className="h-9 w-9">
             <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="person face" />
             <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
@@ -87,7 +160,7 @@ export default function DashboardPage() {
                 <RealtimeThreat />
             </CardHeader>
             <CardContent>
-              <IncidentTimeline />
+              <IncidentTimeline incidents={incidents} />
             </CardContent>
           </Card>
           <div className="grid gap-4 xl:grid-rows-2">
@@ -121,7 +194,7 @@ export default function DashboardPage() {
                 <CardTitle className="font-headline text-xl">Active Threats</CardTitle>
               </CardHeader>
               <CardContent>
-                <ThreatsTable />
+                <ThreatsTable threats={threats} />
               </CardContent>
             </Card>
           </TabsContent>
