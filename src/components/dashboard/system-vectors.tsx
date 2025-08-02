@@ -1,8 +1,9 @@
-import { Wifi, Usb, Bluetooth, Network, HardDrive, ShieldCheck, Fingerprint } from "lucide-react"
+import { Wifi, Usb, Bluetooth, Network, HardDrive, ShieldCheck, Fingerprint, RadioTower } from "lucide-react"
 
 const vectors = [
     { name: "Network (SMB/FTP)", icon: <Network className="h-5 w-5 text-foreground" />, status: "Monitored", color: "text-green-400" },
     { name: "SSH Connections", icon: <Fingerprint className="h-5 w-5 text-foreground" />, status: "Monitored", color: "text-green-400" },
+    { name: "Service Discovery (Zeroconf)", icon: <RadioTower className="h-5 w-5 text-foreground" />, status: "Monitored", color: "text-green-400" },
     { name: "Wireless USB", icon: <Usb className="h-5 w-5 text-foreground" />, status: "Secure", color: "text-green-400" },
     { name: "Bluetooth", icon: <Bluetooth className="h-5 w-5 text-foreground" />, status: "Secure", color: "text-green-400" },
     { name: "System Drivers", icon: <HardDrive className="h-5 w-5 text-foreground" />, status: "Up-to-date", color: "text-green-400" },

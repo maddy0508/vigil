@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { blockIpAddress, changeSystemSetting, uninstallProgram } from '../tools/system-actions';
-import { streamFlow } from '@genkit-ai/next/server';
+import {streamFlow} from '@genkit-ai/next/server';
 
 const AIChatbotInputSchema = z.object({
   query: z.string().describe('The user query about the system security.'),
@@ -55,7 +55,7 @@ const aiChatbotFlow = ai.defineFlow(
     outputSchema: z.object({ response: z.string() }),
   },
   async (input, streamingCallback) => {
-    const {stream} = ai.generateStream({
+    const {stream} = await ai.generateStream({
         prompt: prompt.prompt,
         input,
         tools: prompt.tools,

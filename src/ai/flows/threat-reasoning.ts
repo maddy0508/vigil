@@ -37,6 +37,12 @@ const ThreatReasoningInputSchema = z.object({
     .string()
     .optional()
     .describe('A list of installed system drivers and their status.'),
+  discoveredServices: z
+    .string()
+    .optional()
+    .describe(
+      'A list of services discovered on the network via Zeroconf/mDNS (e.g., AirPlay, Chromecast).'
+    ),
 });
 export type ThreatReasoningInput = z.infer<typeof ThreatReasoningInputSchema>;
 
@@ -75,7 +81,7 @@ const threatReasoningPrompt = ai.definePrompt({
   prompt: `You are an expert security analyst and auditor with deep knowledge of all terminals, shells, and programming languages. Your primary responsibility is to maintain a constant state of vigilance by continuously logging, auditing, and querying every activity on the system.
 
   Based on the provided system state, determine if there is malicious activity. You must scrutinize every detail. Assume nothing is benign without verification.
-  Consider all vectors: processes, logs, binaries, network connections (FTP, SMB, SSH, all TCP/UDP traffic), connected devices (Bluetooth, Wireless USB, PnP, telephony, RAS), system drivers, and known vulnerabilities. Every connection and device must be queried and understood.
+  Consider all vectors: processes, logs, binaries, network connections (FTP, SMB, SSH, all TCP/UDP traffic), discovered network services (Zeroconf, mDNS, like AirPlay or Chromecast), connected devices (Bluetooth, Wireless USB, PnP, telephony, RAS), system drivers, and known vulnerabilities. Every connection and device must be queried and understood.
 
   Keep a log of all activities, including any changes made on the device. Regularly audit everything.
 
@@ -89,6 +95,7 @@ const threatReasoningPrompt = ai.definePrompt({
   Network Connections: {{{networkConnections}}}
   Connected Devices: {{{connectedDevices}}}
   System Drivers: {{{systemDrivers}}}
+  Discovered Services: {{{discoveredServices}}}
   Known Vulnerabilities: {{{knownVulnerabilities}}}
   \nSet isMalicious to true or false.\nReason about why you are setting to true or false.\nSuggest actions to take.
   `,
