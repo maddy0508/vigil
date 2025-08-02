@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
@@ -56,6 +59,9 @@ export default function DashboardPage() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
+             <SheetHeader>
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+             </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
               <a href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
                 <VigilLogo className="h-7 w-7" />
