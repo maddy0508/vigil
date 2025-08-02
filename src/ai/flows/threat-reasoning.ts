@@ -1,3 +1,4 @@
+
 // threat-reasoning.ts
 'use server';
 /**
@@ -12,6 +13,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { attackerProfileGenerator } from './attacker-profile-generator';
 import { runPortScan, runTraceroute, getDnsInfo, runWhois, runDig } from '../tools/system-actions';
+import { incidentResponseReasoning } from './incident-response-reasoning';
 
 const ThreatReasoningInputSchema = z.object({
   systemProcesses: z
@@ -63,6 +65,7 @@ export async function threatReasoning(input: ThreatReasoningInput): Promise<Thre
   const reasoningResult = await threatReasoningFlow(input);
   
   if (reasoningResult.isMalicious) {
+    // Generate the attacker profile
     const profile = await attackerProfileGenerator({
         incidentData: reasoningResult.reasoning,
         logs: input.logs,
@@ -70,6 +73,15 @@ export async function threatReasoning(input: ThreatReasoningInput): Promise<Thre
         systemStates: `Processes: ${input.systemProcesses}, Network: ${input.networkConnections}`
     });
     reasoningResult.attackerProfile = { summary: profile.attackerProfile.summary };
+
+    // Trigger the incident response flow to get actionable suggestions
+    const incidentResponse = await incidentResponseReasoning({
+      incidentData: reasoningResult.reasoning,
+      systemState: `Processes: ${input.systemProcesses}, Network: ${input.networkConnections}, Logs: ${input.logs}`
+    });
+    
+    // Combine the summaries for a more comprehensive action plan.
+    reasoningResult.suggestedActions = incidentResponse.summary;
   }
 
   return reasoningResult;
