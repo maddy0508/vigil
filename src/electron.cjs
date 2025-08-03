@@ -1,60 +1,49 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
-const { getSystemProcesses, getNetworkConnections, getDiscoveredServices } = require('./services/system-monitor');
 const { exec } = require('child_process');
+const { getSystemProcesses, getNetworkConnections, getDiscoveredServices, getSystemLogs } = require('./services/system-monitor');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1280,
+    width: 1200,
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'electron-preload.js'),
-      // Important: contextIsolation and nodeIntegration settings
-      // are crucial for security in Electron.
-      contextIsolation: true,
       nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
-  const startUrl = isDev
-    ? 'http://localhost:9002' // Dev server URL
-    : `file://${path.join(__dirname, '../out/index.html')}`; // Production build path
+  const appUrl = 'http://localhost:9002';
+  mainWindow.loadURL(appUrl);
 
-  mainWindow.loadURL(startUrl);
-
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
+  // Open the DevTools.
+  // mainWindow.webContents.openDevTools();
 }
 
-// --- IPC Handlers ---
-// These handlers listen for calls from the renderer process (our Next.js app)
-// and execute Node.js code securely in the main process.
-
+// IPC handler to execute system commands
 ipcMain.handle('execute-command', async (event, command) => {
-    console.log(`Executing command: ${command}`);
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Execution error for command "${command}": ${error.message}`);
-                // Return stderr as it often contains useful info even on non-zero exit codes
-                resolve(`Error: ${error.message}\nStderr: ${stderr}`);
-                return;
-            }
-            if (stderr) {
-                console.warn(`Command "${command}" produced stderr: ${stderr}`);
-                // Resolve with both stdout and stderr if both exist
-                resolve(`Stdout: ${stdout}\nStderr: ${stderr}`);
-                return;
-            }
-            resolve(stdout);
-        });
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Execution error for command "${command}": ${error.message}`);
+        // For some commands, stderr might contain valid information or warnings
+        if (stderr) {
+           resolve(`Stderr: ${stderr}`);
+        } else {
+          // Reject with the actual error object
+          reject(error);
+        }
+        return;
+      }
+      resolve(stdout);
     });
+  });
 });
 
+// IPC handlers for system monitoring
 ipcMain.handle('get-system-processes', async () => {
-  return await getSystemProcesses();
+    return await getSystemProcesses();
 });
 
 ipcMain.handle('get-network-connections', async () => {
@@ -65,21 +54,21 @@ ipcMain.handle('get-discovered-services', async () => {
     return await getDiscoveredServices();
 });
 
-
-// --- App Lifecycle ---
-
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
+ipcMain.handle('get-system-logs', async () => {
+    return await getSystemLogs();
 });
+
+
+app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
   }
 });
