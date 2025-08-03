@@ -3,7 +3,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: 'export',
+  output: process.env.BUILD_TYPE === 'export' ? 'export' : undefined,
   typescript: {
     ignoreBuildErrors: true,
   },

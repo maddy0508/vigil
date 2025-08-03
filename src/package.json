@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit",
     "export": "next export",
     "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
-    "electron:build:linux": "next build && electron-builder --linux",
-    "electron:build:win": "next build && electron-builder --win",
+    "electron:build:linux": "BUILD_TYPE=export next build && electron-builder --linux",
+    "electron:build:win": "cross-env BUILD_TYPE=export next build && electron-builder --win",
     "install:setup": "chmod +x install.sh && ./install.sh",
     "update": "chmod +x src/update_and_setup.sh && ./src/update_and_setup.sh"
   },
@@ -68,6 +68,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^31.2.1",
     "electron-builder": "^25.0.0",
     "genkit-cli": "^1.14.1",
