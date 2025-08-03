@@ -113,15 +113,14 @@ export function Dashboard() {
           description: "Vigil requires your attention in the AI Assistant panel.",
         })
       } else {
-        // Optional: Log successful, non-malicious scans to the timeline if desired
-        // const newIncident: Incident = {
-        //     time: new Date().toISOString(),
-        //     title: "System Scan Completed",
-        //     description: "No malicious activity was found.",
-        //     details: "System state analyzed by Vigil AI.",
-        //     isMalicious: false,
-        // };
-        // setIncidents(prev => [newIncident, ...prev].slice(0, 20));
+        const newIncident: Incident = {
+            time: new Date().toISOString(),
+            title: "System Scan Completed",
+            description: "No malicious activity was found.",
+            details: "System state analyzed by Vigil AI.",
+            isMalicious: false,
+        };
+        setIncidents(prev => [newIncident, ...prev].slice(0, 20));
       }
     } catch (error) {
        console.error("Threat reasoning failed:", error);

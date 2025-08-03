@@ -14,11 +14,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "export": "next export",
-    "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
-    "electron:build:linux": "BUILD_TYPE=export next build && electron-builder --linux",
-    "electron:build:win": "cross-env BUILD_TYPE=export next build && electron-builder --win",
-    "setup": "npm install",
-    "postinstall": "patch-package"
+    "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
+    "electron:build:linux": "next build && next export && electron-builder --linux",
+    "electron:build:win": "next build && next export && electron-builder --win",
+    "setup": "npm install"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
@@ -65,18 +64,17 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^20.14.12",
     "@types/qrcode": "^1.5.5",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
     "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
     "electron": "^31.2.1",
     "electron-builder": "^25.0.0",
     "genkit-cli": "^1.14.1",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
+    "typescript": "^5.5.4",
     "wait-on": "^7.2.0"
   },
   "build": {

@@ -61,7 +61,7 @@ export function AiChatbot({ userName, initialMessages = [] }: AiChatbotProps) {
   };
 
   return (
-    <div className="flex flex-col h-[220px] -m-6 bg-card rounded-lg">
+    <div className="flex flex-col h-[250px] -m-6 bg-card rounded-lg">
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-4" ref={scrollAreaRef}>
           {messages.map((message, index) => (
