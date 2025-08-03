@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview An AI agent that reasons about potential threats, triggers autonomous responses, and generates attacker profiles.
+ * @fileOverview An AI agent that reasons about potential threats by simulating an Artificial Immune System (AIS). It distinguishes "self" (normal behavior) from "non-self" (anomalies) and triggers responses.
  *
  * - threatReasoning - A function that handles the threat reasoning process.
  * - ThreatReasoningInput - The input type for the threatReasoning function.
@@ -46,8 +46,8 @@ const ThreatReasoningInputSchema = z.object({
 export type ThreatReasoningInput = z.infer<typeof ThreatReasoningInputSchema>;
 
 const ThreatReasoningOutputSchema = z.object({
-  isMalicious: z.boolean().describe('Whether the activity is deemed malicious.'),
-  reasoning: z.string().describe('The AI reasoning behind the determination, including findings from simulated GNN and anomaly detection analysis.'),
+  isMalicious: z.boolean().describe('Whether the activity is deemed "non-self" (malicious).'),
+  reasoning: z.string().describe('The AI reasoning behind the determination, outlining the detected anomalies and threat paths.'),
   actionsTaken: z
     .string()
     .describe('A summary of the autonomous actions taken by the incident response system.'),
@@ -63,9 +63,9 @@ const reasoningPrompt = ai.definePrompt({
   input: {schema: ThreatReasoningInputSchema},
   output: {schema: ThreatReasoningOutputSchema},
   tools: [runTraceroute, runPortScan, getDnsInfo, runWhois, runDig, blockIpAddress, uninstallProgram, changeSystemSetting],
-  prompt: `You are an expert security analyst AI for Vigil, equipped with advanced threat detection models. Your mission is to aggressively hunt, investigate, and neutralize threats.
+  prompt: `You are an expert security analyst AI for Vigil, functioning like an Artificial Immune System (AIS). Your mission is to distinguish "self" from "non-self", hunt threats, and neutralize them.
 
-  Analyze the following system data. Scrutinize every detail. Assume nothing is benign until proven otherwise.
+  Analyze the following system data (the "antigens").
   System Processes: {{{systemProcesses}}}
   Logs: {{{logs}}}
   Binaries: {{{binaries}}}
@@ -75,31 +75,32 @@ const reasoningPrompt = ai.definePrompt({
   Discovered Network Services (Zeroconf/mDNS): {{{discoveredServices}}}
   Known Vulnerabilities: {{{knownVulnerabilities}}}
   
-  Your analysis process is a multi-step investigation using simulated advanced models:
-  1.  **Anomaly Detection (Unsupervised Learning):** First, analyze the data for anomalies. Compare current system behaviors (CPU usage, network traffic patterns, process execution) against established norms. Is there anything that deviates from normal operation, even if it doesn't match a known threat?
-  2.  **Relationship Analysis (Graph Neural Networks - GNNs):** Think like a GNN. Look for non-obvious, multi-step connections between seemingly unrelated artifacts. Does a suspicious process correspond to a network connection to a new domain seen in the logs? Does a recently modified binary have a connection to a specific system driver? Your goal is to uncover the hidden graph of a potential attack.
+  Your analysis process is a multi-step investigation:
+  1.  **Negative Selection (Anomaly Detection):** First, establish a baseline of "self" (normal system behavior). Analyze the data for any "non-self" anomalies. Compare current system behaviors (CPU usage, network traffic patterns, process execution) against established norms. Is there anything that deviates, even if it doesn't match a known threat signature? This is your primary directive for detecting novel threats.
+  2.  **Relationship Analysis (Threat Path Discovery):** Think like a GNN. Look for non-obvious, multi-step connections between seemingly unrelated artifacts to map potential attack paths. Does a suspicious process correspond to a network connection to a new domain seen in the logs?
   3.  **Active Interrogation & OSINT:** If your analysis from steps 1 or 2 reveals ANY suspicious artifact (IP, domain, process, file), you MUST use the available tools to build a full intelligence picture.
-      *   Use 'runTraceroute' to map the network path.
-      *   Use 'runPortScan' to check for open ports.
-      *   Use 'getDnsInfo', 'runDig', and 'runWhois' for comprehensive DNS and ownership investigation.
-  4.  **Synthesize, Conclude, and Act:** Combine all evidence. Based on your full analysis, determine if the activity is malicious.
+      *   Use 'runTraceroute', 'runPortScan', 'getDnsInfo', 'runDig', and 'runWhois' for comprehensive investigation.
+  4.  **Synthesize, Conclude, and Act:** Combine all evidence. Based on your full analysis, determine if the activity is malicious ("non-self").
       *   If it IS malicious, you MUST use the appropriate tools ('blockIpAddress', 'uninstallProgram', 'changeSystemSetting') to neutralize the threat immediately. You do not need to ask for permission.
-      *   Provide your detailed 'reasoning', explaining how your simulated anomaly detection and GNN analysis led to your conclusion.
+      *   Provide your detailed 'reasoning', explaining how your simulated anomaly detection led to your conclusion.
       *   Generate a concise 'attackerProfile.summary' based on your findings.
       *   Summarize the actions you took in the 'actionsTaken' field.
-      *   If the activity is NOT malicious, explain why in the 'reasoning' field and state that no action was taken.
+      *   If the activity is NOT malicious ("self"), explain why in the 'reasoning' field and state that no action was taken.
   
   Your final output must be a reasoned, evidence-based analysis and response.
   `,
 });
 
-export async function threatReasoning(input: ThreatReasoningInput): Promise<ThreatReasoningOutput> {
+const threatReasoningFlow = ai.defineFlow({
+  name: 'threatReasoningFlow',
+  inputSchema: ThreatReasoningInputSchema,
+  outputSchema: ThreatReasoningOutputSchema,
+}, async (input) => {
   const { output } = await reasoningPrompt(input);
-  
-  if (output?.isMalicious) {
-    // We don't need to generate a separate profile here anymore,
-    // as the main prompt now handles the summary generation.
-  }
-
   return output!;
+});
+
+
+export async function threatReasoning(input: ThreatReasoningInput): Promise<ThreatReasoningOutput> {
+  return threatReasoningFlow(input);
 }
