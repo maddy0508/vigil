@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit",
     "export": "next export",
     "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
-    "electron:build:linux": "next build && next export && electron-builder --linux",
-    "electron:build:win": "next build && next export && electron-builder --win",
+    "electron:build:linux": "next export && electron-builder --linux",
+    "electron:build:win": "next export && electron-builder --win",
     "setup": "npm install"
   },
   "dependencies": {
