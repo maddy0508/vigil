@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { attackerProfileGenerator } from './attacker-profile-generator';
 import { runPortScan, runTraceroute, getDnsInfo, runWhois, runDig, blockIpAddress, uninstallProgram, changeSystemSetting } from '../tools/system-actions';
 
 const ThreatReasoningInputSchema = z.object({
@@ -97,16 +96,9 @@ const reasoningPrompt = ai.definePrompt({
 export async function threatReasoning(input: ThreatReasoningInput): Promise<ThreatReasoningOutput> {
   const { output } = await reasoningPrompt(input);
   
-  if (output?.isMalicious && output.reasoning) {
-     const profile = await attackerProfileGenerator({
-        incidentData: output.reasoning,
-        logs: input.logs,
-        descriptors: 'Malicious activity detected and handled by Vigil.',
-        systemStates: `Processes: ${input.systemProcesses}, Network: ${input.networkConnections}`
-    });
-    if (profile) {
-      output.attackerProfile = { summary: profile.attackerProfile.summary };
-    }
+  if (output?.isMalicious) {
+    // We don't need to generate a separate profile here anymore,
+    // as the main prompt now handles the summary generation.
   }
 
   return output!;

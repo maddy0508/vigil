@@ -1,3 +1,4 @@
+
 import { Wifi, Usb, Bluetooth, Network, HardDrive, ShieldCheck, Fingerprint, RadioTower } from "lucide-react"
 
 const vectors = [
