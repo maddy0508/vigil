@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -25,9 +26,9 @@ export type AttackerProfileGeneratorInput =
 const AttackerProfileGeneratorOutputSchema = z.object({
   attackerProfile: z.object({
     threatLevel: z.enum(['Low', 'Medium', 'High', 'Critical']).describe('The assessed threat level.'),
-    techniques: z.array(z.string()).describe('Observed attacker techniques, tactics, and procedures (TTPs).'),
+    techniques: z.array(z.string()).describe('Observed attacker techniques, tactics, and procedures (TTPs). This is their "behavioral fingerprint".'),
     motives: z.array(z.string()).describe('Potential motives of the attacker (e.g., financial, espionage, disruption).'),
-    indicatorsOfCompromise: z.array(z.string()).describe('Specific indicators of compromise (IoCs) like IP addresses, file hashes, or domains.'),
+    indicatorsOfCompromise: z.array(z.string()).describe('Specific indicators of compromise (IoCs) like IP addresses, file hashes, or domains. These are the "virtual airtags".'),
     summary: z.string().describe('A summary of the attacker profile suitable for a law enforcement report.'),
   }),
 });
@@ -45,7 +46,7 @@ const prompt = ai.definePrompt({
   input: {schema: AttackerProfileGeneratorInputSchema},
   output: {schema: AttackerProfileGeneratorOutputSchema},
   prompt: `You are an expert cybersecurity analyst creating a detailed attacker profile for a law enforcement report.
-  Analyze the provided incident data, logs, descriptors, and system states to construct a comprehensive profile.
+  Analyze the provided incident data, logs, descriptors, and system states to construct a comprehensive profile. Your goal is to create a "virtual airtag" by identifying the adversary's unique behavioral fingerprint.
 
   Incident Data: {{{incidentData}}}
   Logs: {{{logs}}}
@@ -54,9 +55,9 @@ const prompt = ai.definePrompt({
   
   Your report must contain:
   - A clear assessment of the threat level.
-  - A list of observed techniques, tactics, and procedures (TTPs).
+  - A list of observed techniques, tactics, and procedures (TTPs). Analyze the sequence of actions to identify the attacker's unique methods. This is their "behavioral fingerprint".
   - A list of potential motives.
-  - A list of concrete Indicators of Compromise (IoCs). This is critical. Extract every IP address, domain name, file hash, or suspicious username you can find.
+  - A list of concrete Indicators of Compromise (IoCs). This is the most critical part of the "virtual airtag". Extract every IP address, domain name, file hash, or suspicious username you can find.
   - A professional summary of the attacker and the incident, written in a tone appropriate for law enforcement.
   `,
 });
