@@ -1,81 +1,62 @@
-
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
-const { getSystemProcesses, getNetworkConnections, getDiscoveredServices, getSystemLogs } = require('./src/services/system-monitor');
 const { exec } = require('child_process');
+const { getSystemProcesses, getNetworkConnections, getDiscoveredServices, getSystemLogs } = require('./src/services/system-monitor');
+
 
 function createWindow() {
-  const win = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'src/electron-preload.js'),
-      // Important: These settings are needed for the preload script to work
-      contextIsolation: true,
+      preload: path.join(__dirname, 'electron-preload.js'),
       nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
-  // Load the Next.js app
-  if (isDev) {
-    win.loadURL('http://localhost:9002');
-    win.webContents.openDevTools();
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.loadURL('http://localhost:9002');
+    mainWindow.webContents.openDevTools();
   } else {
-    // In production, load the exported HTML file
-     const startUrl = path.join(__dirname, '.next/server/app/index.html');
-     win.loadFile(startUrl);
+    // In production, load the exported static files
+    mainWindow.loadFile(path.join(__dirname, 'out/index.html'));
   }
+}
 
-  // --- IPC Handlers ---
+app.whenReady().then(() => {
+  // Expose a handler for executing shell commands
   ipcMain.handle('execute-command', async (event, command) => {
     return new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
         if (error) {
-          console.error(`Exec error for command "${command}": ${error.message}`);
-          // For commands that are expected to fail (like `nmap` if not installed),
-          // we resolve with the error message so the AI can process it.
-          resolve(`Error executing command: ${error.message}. Stderr: ${stderr}`);
+          console.error(`exec error: ${error}`);
+          // Even on error, we might want to resolve with stderr to show in the UI
+          resolve(stderr || error.message);
           return;
         }
         if (stderr) {
-          // Some tools output informational messages to stderr, so we log it but still resolve stdout.
-           if (!command.startsWith('avahi-browse')) { // avahi-browse is noisy
-             console.warn(`Exec command "${command}" produced stderr: ${stderr}`);
-           }
+           console.warn(`Command stderr: ${stderr}`);
         }
         resolve(stdout);
       });
     });
   });
 
-  ipcMain.handle('get-system-processes', async () => {
-    return getSystemProcesses();
+  // Expose handlers for system monitoring
+  ipcMain.handle('get-system-processes', getSystemProcesses);
+  ipcMain.handle('get-network-connections', getNetworkConnections);
+  ipcMain.handle('get-discovered-services', getDiscoveredServices);
+  ipcMain.handle('get-system-logs', getSystemLogs);
+
+
+  createWindow();
+
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-
-  ipcMain.handle('get-network-connections', async () => {
-    return getNetworkConnections();
-  });
-
-   ipcMain.handle('get-discovered-services', async () => {
-    return getDiscoveredServices();
-  });
-
-  ipcMain.handle('get-system-logs', async () => {
-    return getSystemLogs();
-  });
-}
-
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
 });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit();
 });

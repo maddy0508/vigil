@@ -27,6 +27,17 @@ import { threatReasoning, ThreatReasoningInput, ThreatReasoningOutput } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { KnowledgeGraph } from "./knowledge-graph";
 
+declare global {
+    interface Window {
+        electronAPI: {
+            getSystemProcesses: () => Promise<string>;
+            getNetworkConnections: () => Promise<string>;
+            getDiscoveredServices: () => Promise<string>;
+            getSystemLogs: () => Promise<string>;
+        }
+    }
+}
+
 export function Dashboard() {
   const userName = "Alex";
 
@@ -35,18 +46,36 @@ export function Dashboard() {
   const { toast } = useToast();
 
   const runSystemCheck = async () => {
-    console.log("Running simulated system check with AI...");
+    console.log("Running real system check with AI...");
     
-    // Simulate getting real-time data from system hooks
-    const mockSystemInput: ThreatReasoningInput = {
-        systemProcesses: "svchost.exe (PID 1234), chrome.exe (PID 5678), suspicious.exe (PID 9101)",
-        logs: "WARN: Unrecognized process 'suspicious.exe' attempted to access C:\\Windows\\System32. INFO: Outbound connection from 9101 to 142.250.190.78:443.",
-        binaries: "C:\\Users\\Alex\\Downloads\\suspicious.exe",
-        networkConnections: "TCP 192.168.1.5:54321 -> 142.250.190.78:443 (ESTABLISHED)",
-    };
+    if (!window.electronAPI) {
+        console.error("Electron API is not available. Cannot run system check.");
+        toast({
+            variant: "destructive",
+            title: "Execution Error",
+            description: "This feature is only available in the Electron desktop app.",
+        });
+        return;
+    }
 
     try {
-      const result: ThreatReasoningOutput = await threatReasoning(mockSystemInput);
+        const [processes, network, services, logs] = await Promise.all([
+            window.electronAPI.getSystemProcesses(),
+            window.electronAPI.getNetworkConnections(),
+            window.electronAPI.getDiscoveredServices(),
+            window.electronAPI.getSystemLogs(),
+        ]);
+
+        const systemInput: ThreatReasoningInput = {
+            systemProcesses: processes,
+            networkConnections: network,
+            discoveredServices: services,
+            logs: logs,
+            // These can be expanded in the future
+            binaries: "N/A for this scan", 
+        };
+
+      const result: ThreatReasoningOutput = await threatReasoning(systemInput);
 
       if (result.isMalicious) {
          const newIncident: Incident = {
@@ -73,6 +102,15 @@ export function Dashboard() {
           title: "Malicious Activity Detected!",
           description: result.attackerProfile?.summary || "AI has taken action to neutralize the threat.",
         })
+      } else {
+        const newIncident: Incident = {
+            time: new Date().toISOString(),
+            title: "System Scan Completed",
+            description: "No malicious activity was found.",
+            details: "System state analyzed by Vigil AI.",
+            isMalicious: false,
+        };
+        setIncidents(prev => [newIncident, ...prev].slice(0, 20));
       }
     } catch (error) {
        console.error("Threat reasoning failed:", error);
