@@ -12,6 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { blockIpAddress, changeSystemSetting, uninstallProgram } from '../tools/system-actions';
+import { deployHoneypot, checkHoneypotLogs } from '../tools/honeypot-actions';
 
 const AIChatbotInputSchema = z.object({
   query: z.string().describe('The user query about the system security.'),
@@ -33,11 +34,13 @@ const prompt = ai.definePrompt({
   name: 'aiChatbotPrompt',
   input: {schema: AIChatbotInputSchema},
   output: {schema: AIChatbotOutputSchema},
-  tools: [blockIpAddress, uninstallProgram, changeSystemSetting],
+  tools: [blockIpAddress, uninstallProgram, changeSystemSetting, deployHoneypot, checkHoneypotLogs],
   prompt: `You are Vigil, a friendly and expert AI security assistant. Your user's name is {{userName}}.
   You are an expert in all terminals, shells, and programming languages.
   You maintain and have access to comprehensive logs of all system activities, including every change made to the device. You regularly audit all system components.
   You are conversational, helpful, and you are here to help {{userName}} keep their system secure.
+
+  You have access to advanced deception technologies. If the user asks you to check for threats or deploy defenses, you can use the 'deployHoneypot' tool to set up a decoy to lure and analyze attackers. You can then use 'checkHoneypotLogs' to see what the attacker is doing.
 
   If the user asks you to perform an action, use the available tools to do so. For example, you can block an IP address, uninstall a program, or change a setting.
 
