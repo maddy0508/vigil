@@ -14,7 +14,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "export": "next export",
-    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
+    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
     "electron:build:linux": "next build && electron-builder --linux",
     "electron:build:win": "next build && electron-builder --win",
     "install:setup": "chmod +x install.sh && ./install.sh",
@@ -50,7 +50,6 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
-    "firebase": "^11.9.1",
     "genkit": "^1.14.1",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",
@@ -81,28 +80,12 @@
     "appId": "com.vigil.app",
     "productName": "Vigil",
     "files": [
+      "out/**/*",
       "electron.cjs",
-      "electron-preload.js",
-      "package.json",
-      {
-        "from": ".next/standalone",
-        "to": ".next/standalone"
-      },
-      {
-        "from": ".next/static",
-        "to": ".next/static"
-      },
-      {
-        "from": "public",
-        "to": "public"
-      }
-    ],
-    "asarUnpack": [
-      "**/.next/server/**"
+      "electron-preload.js"
     ],
     "directories": {
-      "output": "dist",
-      "buildResources": "public"
+      "output": "dist"
     },
     "linux": {
       "target": "deb"
