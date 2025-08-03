@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import { threatReasoning, ThreatReasoningInput, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
 import { useToast } from "@/hooks/use-toast";
 import { KnowledgeGraph } from "./knowledge-graph";
+import { Share } from "./share";
 
 declare global {
     interface Window {
@@ -230,11 +231,12 @@ export function Dashboard() {
           </div>
         </div>
         <Tabs defaultValue="threats">
-          <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-flex bg-secondary">
+          <TabsList className="grid w-full grid-cols-5 md:w-auto md:inline-flex bg-secondary">
             <TabsTrigger value="threats">Active Threats</TabsTrigger>
             <TabsTrigger value="knowledge_graph">Knowledge Graph</TabsTrigger>
             <TabsTrigger value="policies">Policy Adaptation</TabsTrigger>
             <TabsTrigger value="reports">Report Generation</TabsTrigger>
+            <TabsTrigger value="share">Share</TabsTrigger>
           </TabsList>
           <TabsContent value="threats">
             <Card className="shadow-lg">
@@ -273,6 +275,16 @@ export function Dashboard() {
               </CardHeader>
               <CardContent>
                 <ReportGeneration />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="share">
+             <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">Share Application</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Share />
               </CardContent>
             </Card>
           </TabsContent>
