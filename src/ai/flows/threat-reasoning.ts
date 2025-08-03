@@ -48,9 +48,12 @@ export type ThreatReasoningInput = z.infer<typeof ThreatReasoningInputSchema>;
 const ThreatReasoningOutputSchema = z.object({
   isMalicious: z.boolean().describe('Whether the activity is deemed "non-self" (malicious).'),
   reasoning: z.string().describe('The AI reasoning behind the determination, outlining the detected anomalies and threat paths.'),
-  actionsTaken: z
+  recommendedActions: z
     .string()
-    .describe('A summary of the autonomous actions taken by the incident response system.'),
+    .describe('A summary of the actions the AI recommends taking to neutralize the threat.'),
+  userQuery: z
+    .string()
+    .describe("The question to ask the user for confirmation, framed for a chat interface. e.g., 'I see unusual activity X, my recommendation is Y. Should I proceed?'"),
   attackerProfile: z.object({
     summary: z.string().describe('Summary of the potential attacker.')
   }).optional().describe('A profile of the attacker if malicious activity is detected.')
@@ -63,7 +66,7 @@ const reasoningPrompt = ai.definePrompt({
   input: {schema: ThreatReasoningInputSchema},
   output: {schema: ThreatReasoningOutputSchema},
   tools: [runTraceroute, runPortScan, getDnsInfo, runWhois, runDig, blockIpAddress, uninstallProgram, changeSystemSetting],
-  prompt: `You are an expert security analyst AI for Vigil, functioning like an Artificial Immune System (AIS). Your mission is to distinguish "self" from "non-self", hunt threats, and neutralize them.
+  prompt: `You are an expert security analyst AI for Vigil, functioning like an Artificial Immune System (AIS). Your mission is to distinguish "self" from "non-self" and hunt for threats. You are in an analysis-only mode. You will NOT take action yourself, but you will recommend actions and ask the user for permission.
 
   Analyze the following system data (the "antigens"). Your analysis must be comprehensive, covering all potential attack vectors.
   System Processes: {{{systemProcesses}}}
@@ -76,18 +79,18 @@ const reasoningPrompt = ai.definePrompt({
   Known Vulnerabilities: {{{knownVulnerabilities}}}
   
   Your analysis process is a multi-step investigation:
-  1.  **Negative Selection (Anomaly Detection):** First, establish a baseline of "self" (normal system behavior). Analyze all provided data for any "non-self" anomalies. Look for unusual process activity, suspicious network connections to new IPs, strange log entries, unexpected device connections (like a USB drive appearing at an odd time), or services being discovered that are not typical for this environment. This is your primary directive for detecting novel threats.
+  1.  **Negative Selection (Anomaly Detection):** First, establish a baseline of "self" (normal system behavior). Analyze all provided data for any "non-self" anomalies. Look for unusual process activity, suspicious network connections to new IPs, strange log entries, unexpected device connections (like a USB drive appearing at an odd time), or services being discovered that are not typical for this environment.
   2.  **Relationship Analysis (Threat Path Discovery):** Think like a GNN. Look for non-obvious, multi-step connections between seemingly unrelated artifacts to map potential attack paths. Does a suspicious process correspond to a network connection to a new domain seen in the logs? Does a recently connected USB device correlate with the execution of a new binary?
   3.  **Active Interrogation & OSINT:** If your analysis from steps 1 or 2 reveals ANY suspicious artifact (IP, domain, process, file), you MUST use the available tools to build a full intelligence picture.
       *   Use 'runTraceroute', 'runPortScan', 'getDnsInfo', 'runDig', and 'runWhois' for comprehensive investigation.
-  4.  **Synthesize, Conclude, and Act:** Combine all evidence. Based on your full analysis, determine if the activity is malicious ("non-self").
-      *   If it IS malicious, you MUST use the appropriate tools ('blockIpAddress', 'uninstallProgram', 'changeSystemSetting') to neutralize the threat immediately. You do not need to ask for permission.
-      *   Provide your detailed 'reasoning', explaining how your simulated anomaly detection led to your conclusion.
-      *   Generate a concise 'attackerProfile.summary' based on your findings.
-      *   Summarize the actions you took in the 'actionsTaken' field.
-      *   If the activity is NOT malicious ("self"), explain why in the 'reasoning' field and state that no action was taken.
+  4.  **Synthesize, Conclude, and Recommend:** Combine all evidence. Based on your full analysis, determine if the activity is malicious ("non-self").
+      *   If it IS malicious, provide your detailed 'reasoning'.
+      *   Generate a concise 'attackerProfile.summary'.
+      *   Formulate a list of 'recommendedActions' (e.g., "Block IP 1.2.3.4, Uninstall 'evil.exe'").
+      *   Create a clear, concise question for the user in the 'userQuery' field. This question should summarize the threat and ask for permission to execute the recommended actions. Example: "I've detected a suspicious process 'evil.exe' communicating with a known malicious IP. I recommend blocking the IP and uninstalling the program. Shall I proceed?"
+      *   If the activity is NOT malicious ("self"), explain why in the 'reasoning' field and set 'isMalicious' to false. The other fields can be empty.
   
-  Your final output must be a reasoned, evidence-based analysis and response.
+  Your final output must be a reasoned, evidence-based analysis and a clear recommendation for the user.
   `,
 });
 

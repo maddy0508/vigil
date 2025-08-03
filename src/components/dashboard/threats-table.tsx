@@ -29,6 +29,17 @@ export function ThreatsTable({ threats }: ThreatsTableProps) {
     }
   };
 
+  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "outline" | "destructive" | null | undefined => {
+     switch (status) {
+      case 'Neutralized':
+        return 'default';
+       case 'Action Recommended':
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -51,7 +62,7 @@ export function ThreatsTable({ threats }: ThreatsTableProps) {
               </TableCell>
               <TableCell className="font-medium max-w-sm truncate">{threat.description}</TableCell>
               <TableCell>
-                 <Badge variant={threat.status === 'Neutralized' ? 'default' : 'secondary'}>
+                 <Badge variant={getStatusBadgeVariant(threat.status)}>
                   {threat.status}
                 </Badge>
               </TableCell>

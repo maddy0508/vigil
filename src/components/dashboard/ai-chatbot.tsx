@@ -1,3 +1,4 @@
+
 "use client"
 
 import { aiChatbot, AIChatbotOutput } from "@/ai/flows/ai-chatbot"
@@ -10,22 +11,27 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-type Message = {
+export type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
 interface AiChatbotProps {
   userName: string;
+  initialMessages?: Message[];
 }
 
-export function AiChatbot({ userName }: AiChatbotProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: `Hello ${userName}! How can I help you with your system's security today?` }
-  ]);
+export function AiChatbot({ userName, initialMessages = [] }: AiChatbotProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [inProgress, setInProgress] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if(initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {

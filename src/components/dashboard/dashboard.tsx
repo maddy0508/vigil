@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VigilLogo } from "@/components/vigil-logo";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { IncidentTimeline, type Incident } from "@/components/dashboard/incident-timeline";
-import { AiChatbot } from "@/components/dashboard/ai-chatbot";
+import { AiChatbot, type Message } from "@/components/dashboard/ai-chatbot";
 import { ThreatsTable, type Threat } from "@/components/dashboard/threats-table";
 import { PolicyAdaptation } from "@/components/dashboard/policy-adaptation";
 import { ReportGeneration } from "@/components/dashboard/report-generation";
@@ -43,6 +43,9 @@ export function Dashboard() {
 
   const [threats, setThreats] = useState<Threat[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([
+     { role: "assistant", content: `Hello ${userName}! How can I help you with your system's security today?` }
+  ]);
   const { toast } = useToast();
 
   const runSystemCheck = async () => {
@@ -71,7 +74,6 @@ export function Dashboard() {
             networkConnections: network,
             discoveredServices: services,
             logs: logs,
-            // These can be expanded in the future
             binaries: "N/A for this scan", 
         };
 
@@ -80,9 +82,9 @@ export function Dashboard() {
       if (result.isMalicious) {
          const newIncident: Incident = {
             time: new Date().toISOString(),
-            title: "AI-Detected Threat Neutralized",
+            title: "AI-Detected Anomaly",
             description: result.reasoning.substring(0, 100) + '...',
-            details: `Response: ${result.actionsTaken}`,
+            details: `Recommended Action: ${result.recommendedActions}`,
             isMalicious: true,
             attackerSummary: result.attackerProfile?.summary,
         };
@@ -92,25 +94,33 @@ export function Dashboard() {
             id: `threat-${Date.now()}`,
             description: result.reasoning,
             severity: "High",
-            status: 'Neutralized',
+            status: 'Action Recommended',
             timestamp: new Date().toLocaleTimeString(),
         };
         setThreats(prev => [newThreat, ...prev].slice(0, 20));
 
+        // Proactively start a conversation with the user in the chat
+        const aiQueryMessage: Message = {
+            role: "assistant",
+            content: result.userQuery
+        };
+        setChatMessages(prev => [...prev, aiQueryMessage]);
+
         toast({
           variant: "destructive",
-          title: "Malicious Activity Detected!",
-          description: result.attackerProfile?.summary || "AI has taken action to neutralize the threat.",
+          title: "Anomaly Detected!",
+          description: "Vigil requires your attention in the AI Assistant panel.",
         })
       } else {
-        const newIncident: Incident = {
-            time: new Date().toISOString(),
-            title: "System Scan Completed",
-            description: "No malicious activity was found.",
-            details: "System state analyzed by Vigil AI.",
-            isMalicious: false,
-        };
-        setIncidents(prev => [newIncident, ...prev].slice(0, 20));
+        // Optional: Log successful, non-malicious scans to the timeline if desired
+        // const newIncident: Incident = {
+        //     time: new Date().toISOString(),
+        //     title: "System Scan Completed",
+        //     description: "No malicious activity was found.",
+        //     details: "System state analyzed by Vigil AI.",
+        //     isMalicious: false,
+        // };
+        // setIncidents(prev => [newIncident, ...prev].slice(0, 20));
       }
     } catch (error) {
        console.error("Threat reasoning failed:", error);
@@ -123,11 +133,8 @@ export function Dashboard() {
   };
 
   useEffect(() => {
-    // Run an initial check on load
     runSystemCheck();
-    // Then run a check every 30 seconds for demo purposes
     const intervalId = setInterval(runSystemCheck, 30000); 
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => clearInterval(intervalId);
   }, []);
@@ -217,7 +224,7 @@ export function Dashboard() {
                 <CardTitle className="font-headline text-2xl">AI Assistant</CardTitle>
               </CardHeader>
               <CardContent>
-                <AiChatbot userName={userName} />
+                <AiChatbot userName={userName} initialMessages={chatMessages} />
               </CardContent>
             </Card>
           </div>
