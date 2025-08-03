@@ -17,7 +17,7 @@
     "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
     "electron:build:linux": "next export && electron-builder --linux",
     "electron:build:win": "next export && electron-builder --win",
-    "setup": "npm install"
+    "setup": "npm install && patch-package"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
