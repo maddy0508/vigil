@@ -2,7 +2,6 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/incident-response-reasoning.ts';
 import '@/ai/flows/threat-reasoning.ts';
 import '@/ai/flows/policy-adaptation-manager.ts';
 import '@/ai/flows/ai-chatbot.ts';
