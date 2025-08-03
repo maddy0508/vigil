@@ -14,7 +14,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "export": "next export",
-    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
+    "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
     "electron:build:linux": "next build && electron-builder --linux",
     "electron:build:win": "next build && electron-builder --win",
     "install:setup": "chmod +x install.sh && ./install.sh",
@@ -82,7 +82,9 @@
     "files": [
       "out/**/*",
       "electron.cjs",
-      "electron-preload.js"
+      "electron-preload.js",
+      "package.json",
+      "src/services/system-monitor.ts"
     ],
     "directories": {
       "output": "dist"
