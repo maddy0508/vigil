@@ -14,7 +14,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "export": "next export",
-    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
+    "electron:dev": "concurrently --kill-others \"npm:dev\" \"wait-on http://localhost:9002 -o preflightContinue=true && electron .\"",
     "electron:build:linux": "next build && electron-builder --linux",
     "electron:build:win": "next build && electron-builder --win",
     "install:setup": "chmod +x install.sh && ./install.sh",
@@ -80,28 +80,14 @@
     "appId": "com.vigil.app",
     "productName": "Vigil",
     "files": [
+      "out/**/*",
       "electron.cjs",
       "electron-preload.js",
       "package.json",
-      {
-        "from": ".next/standalone",
-        "to": ".next/standalone"
-      },
-      {
-        "from": ".next/static",
-        "to": ".next/static"
-      },
-      {
-        "from": "public",
-        "to": "public"
-      }
-    ],
-    "asarUnpack": [
-      "**/.next/server/**"
+      "src/services/system-monitor.ts"
     ],
     "directories": {
-      "output": "dist",
-      "buildResources": "public"
+      "output": "dist"
     },
     "linux": {
       "target": "deb"
