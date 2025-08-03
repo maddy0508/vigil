@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { SystemVectors } from "@/components/dashboard/system-vectors";
 import { useState, useEffect } from "react";
-import { threatReasoning, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
+import { threatReasoning, ThreatReasoningInput, ThreatReasoningOutput } from "@/ai/flows/threat-reasoning";
 import { useToast } from "@/hooks/use-toast";
 import { KnowledgeGraph } from "./knowledge-graph";
 
@@ -35,37 +35,53 @@ export function Dashboard() {
   const { toast } = useToast();
 
   const runSystemCheck = async () => {
-    console.log("Running simulated system check...");
+    console.log("Running simulated system check with AI...");
     
-    // Simulate a threat for demonstration
-    const mockThreatReasoning: ThreatReasoningOutput = {
-      isMalicious: true,
-      reasoning: "Simulated analysis detected suspicious outbound connection to known malicious IP 142.250.190.78 (owned by 'ShadowNet'). The process 'svchost.exe' initiated the connection, which is unusual.",
-      actionsTaken: "Neutralized Threat: Blocked IP 142.250.190.78 using system firewall.",
-      attackerProfile: {
-        summary: "The threat actor 'ShadowNet' is a known entity specializing in data exfiltration. They often use compromised system processes to hide their activity.",
-      },
+    // Simulate getting real-time data from system hooks
+    const mockSystemInput: ThreatReasoningInput = {
+        systemProcesses: "svchost.exe (PID 1234), chrome.exe (PID 5678), suspicious.exe (PID 9101)",
+        logs: "WARN: Unrecognized process 'suspicious.exe' attempted to access C:\\Windows\\System32. INFO: Outbound connection from 9101 to 142.250.190.78:443.",
+        binaries: "C:\\Users\\Alex\\Downloads\\suspicious.exe",
+        networkConnections: "TCP 192.168.1.5:54321 -> 142.250.190.78:443 (ESTABLISHED)",
     };
 
-    const newIncident: Incident = {
-        time: new Date().toISOString(),
-        title: "Threat Neutralized (Simulated)",
-        description: mockThreatReasoning.reasoning.substring(0, 100) + '...',
-        details: `Response: ${mockThreatReasoning.actionsTaken}`,
-        isMalicious: true,
-        attackerSummary: mockThreatReasoning.attackerProfile?.summary,
-    };
+    try {
+      const result: ThreatReasoningOutput = await threatReasoning(mockSystemInput);
 
-    setIncidents(prev => [newIncident, ...prev].slice(0, 20));
+      if (result.isMalicious) {
+         const newIncident: Incident = {
+            time: new Date().toISOString(),
+            title: "AI-Detected Threat Neutralized",
+            description: result.reasoning.substring(0, 100) + '...',
+            details: `Response: ${result.actionsTaken}`,
+            isMalicious: true,
+            attackerSummary: result.attackerProfile?.summary,
+        };
+        setIncidents(prev => [newIncident, ...prev].slice(0, 20));
 
-    const newThreat: Threat = {
-        id: `threat-${Date.now()}`,
-        description: mockThreatReasoning.reasoning,
-        severity: "High",
-        status: 'Neutralized',
-        timestamp: new Date().toLocaleTimeString(),
-    };
-    setThreats(prev => [newThreat, ...prev].slice(0, 20));
+        const newThreat: Threat = {
+            id: `threat-${Date.now()}`,
+            description: result.reasoning,
+            severity: "High",
+            status: 'Neutralized',
+            timestamp: new Date().toLocaleTimeString(),
+        };
+        setThreats(prev => [newThreat, ...prev].slice(0, 20));
+
+        toast({
+          variant: "destructive",
+          title: "Malicious Activity Detected!",
+          description: result.attackerProfile?.summary || "AI has taken action to neutralize the threat.",
+        })
+      }
+    } catch (error) {
+       console.error("Threat reasoning failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Error Running System Check",
+          description: "Could not analyze system state.",
+        });
+    }
   };
 
   useEffect(() => {
